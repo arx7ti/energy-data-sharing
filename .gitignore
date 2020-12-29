@@ -1,5 +1,6 @@
 .DS_Store
 .idea
 /tests/
+/assets/icons/
 *.log
 **/__pycache__/
