@@ -1,0 +1,9 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div class="card p-4 mb-3">
+        <h1 class="semi-bold mb-4">Account Management </h1>
+            {% if current_user.is_authenticated %}
+                Hello, {{ current_user.name }}.
+            {% endif %}
+    </div>
+{% endblock %}

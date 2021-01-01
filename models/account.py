@@ -3,14 +3,18 @@
 from models.shared import db
 from datetime import datetime
 from flask_login import UserMixin
-
+from werkzeug.security import check_password_hash
 
 class Account(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(320), unique=True, nullable=False)
-    password = db.Column(db.String(32), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     name = db.Column(db.String(255), unique=False, nullable=False)
+
+    def check_password(self, password):
+        return True if check_password_hash(self.password, password) else False
+        
 
     def __repr__(self):
         return "<%s>" % self.email
