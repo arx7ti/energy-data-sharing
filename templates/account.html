@@ -1,9 +1,35 @@
 {% extends 'layout.html' %}
 {% block content %}
-    <div class="card p-4 mb-3">
-        <h1 class="semi-bold mb-4">Account Management </h1>
-            {% if current_user.is_authenticated %}
-                Hello, {{ current_user.name }}.
-            {% endif %}
-    </div>
+<h1 class="semi-bold mb-4">Account Management</h1>
+<div class="card p-3 mb-3">
+    <div class="d-flex align-items-center"><b>{{ current_user.name }}</b> <a href="/logout" class="ml-1 badge btn-red">Logout</a></div>
+        Email: {{ current_user.email }}
+</div>
+<h1 class="semi-bold mb-4">Households</h1>
+<div class="card px-3 py-3 mb-3">
+    <div class="mb-3"><a href="/account/add-household" class="btn btn-violet">Add household</a></div>
+    <!-- <div class="table-responsive"> -->
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">
+                Name</th>
+                <th scope="col">
+                Address</th>
+                <th scope="col">
+                Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for household in households %}
+                    <td>{{ household.name }}</td>
+                    <td>{{ household.address }}</td>
+                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    <!-- </div> -->
+</div>
 {% endblock %}

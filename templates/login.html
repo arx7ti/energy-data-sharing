@@ -1,9 +1,8 @@
 {% extends 'layout.html' %}
 {% from 'macros/forms.html' import quick_form %}
 {% block content %}
-<!-- <h1 class="semi-bold mb-4">Welcome!</h1> -->
-    <div class="card p-4 mb-3">
-        <h1 class="mb-4 semi-bold">Login</h1>
-        {{ quick_form(form, button_map={"submit": "red"}) }}
-    </div>
+<h1 class="mb-4 semi-bold">Login</h1>
+<div class="card p-3 mb-3">
+    {{ quick_form(form, button_map={"submit": "red"}) }}
+</div>
 {% endblock %}

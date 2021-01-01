@@ -58,12 +58,6 @@ a:hover {
   text-decoration: none;
 }
 
-.bg-black,
-.bg-black:hover {
-  background-color: var(--black) !important;
-  color: white;
-}
-
 .btn-violet {
   border-color: var(--violet-soft);
   background-color: var(--violet-soft);

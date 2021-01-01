@@ -49,3 +49,9 @@ class LoginForm(Form):
             return None
         if not self.account.check_password(field.data):
             raise ValidationError("Wrong password.")
+
+
+class AddHouseholdForm(Form):
+    name = StringField("Name", [validators.Length(min=2, max=255)])
+    address = StringField("Address", [validators.Length(min=6, max=320)])
+    submit = SubmitField("Add household")

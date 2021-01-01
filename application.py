@@ -2,8 +2,8 @@
 
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models.shared import db
-from models.account import Account
-from forms.account import SignUpForm, LoginForm
+from models.account import Account, Household
+from forms.account import SignUpForm, LoginForm, AddHouseholdForm
 from flask_migrate import Migrate
 from flask_login import (
     LoginManager,
@@ -40,14 +40,15 @@ def unauthorized_callback():
 @app.route("/account", methods=["GET"])
 @login_required
 def account():
-    return render_template("account.html")
+    context = {"households": Household.query.filter_by(account_id=current_user.id)}
+    return render_template("account.html", **context)
 
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -76,6 +77,23 @@ def signup():
         login_user(account)
         return redirect(url_for("account"))
     return render_template("signup.html", form=form)
+
+
+@app.route("/account/add-household", methods=["GET", "POST"])
+@login_required
+def add_household():
+    form = AddHouseholdForm(request.form)
+    if request.method == "POST" and form.validate():
+        household = Household(
+            account_id=current_user.id,
+            account=current_user,
+            name=form.name.data,
+            address=form.address.data,
+        )
+        db.session.add(household)
+        db.session.commit()
+        return redirect(url_for("account"))
+    return render_template("add_household.html", form=form)
 
 
 if __name__ == "__main__":
