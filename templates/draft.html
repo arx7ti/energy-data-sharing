@@ -6,9 +6,9 @@
     <meta name="viewport" content=
     "width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Bootstrap 101 Template</title><!-- Bootstrap -->
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/icons/css/all.min.css" rel="stylesheet">
+    <title>{{ title }}</title><!-- Bootstrap -->
+    <link href="{{url_for('static', filename='assets/css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{url_for('static', filename='assets/icons/css/all.min.css')}}" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href=
     "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300&amp;display=swap"
@@ -17,7 +17,7 @@
     <link href=
     "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&amp;display=swap"
     rel="stylesheet">
-    <link href="main.css" rel="stylesheet">
+    <link href="{{url_for('static', filename='site/main.css')}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -52,6 +52,9 @@
                     <a href="#" class=
                     "d-flex align-items-center semi-bold custom-button nav-item px-3 py-2">
                     <i class="far fa-book"></i>Documentation</a>
+                    <a href="#" class=
+                    "d-flex align-items-center semi-bold custom-button nav-item px-3 py-2">
+                    <i class="far fa-plug"></i>Extensions</a>
                 </nav>
                 <a href="#" class=
                 "d-flex align-items-center semi-bold custom-button nav-item px-3 py-2 mb-2"><i class="far fa-bug"></i>Issues</a>
@@ -143,8 +146,8 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12 pt-3">
-                        © 2021
+                    <div class="col-12 pt-3 mb-5">
+                        Deep NILM © 2021
                     </div>
                 </div>
             </div>

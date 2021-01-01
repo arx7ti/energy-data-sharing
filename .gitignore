@@ -1,6 +1,9 @@
 .DS_Store
 .idea
+.envrc
 /tests/
-/assets/icons/
+/migrations/
+/.direnv/
+**/icons/
 *.log
 **/__pycache__/
