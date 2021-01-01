@@ -5,6 +5,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash
 
+
 class Account(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(320), unique=True, nullable=False)
@@ -14,7 +15,6 @@ class Account(UserMixin, db.Model):
 
     def check_password(self, password):
         return True if check_password_hash(self.password, password) else False
-        
 
     def __repr__(self):
         return "<%s>" % self.email

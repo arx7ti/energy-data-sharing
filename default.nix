@@ -37,6 +37,7 @@ in
     dependencies = (with pkgs; [
       python3
     ]) ++ (with python37Packages; [
+      black
       requests
       psycopg2
       flask

@@ -5,7 +5,13 @@ from models.shared import db
 from models.account import Account
 from forms.account import SignUpForm, LoginForm
 from flask_migrate import Migrate
-from flask_login import LoginManager, login_required, login_user, current_user
+from flask_login import (
+    LoginManager,
+    login_required,
+    login_user,
+    logout_user,
+    current_user,
+)
 from flask_bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash
 from wtforms import ValidationError
@@ -25,25 +31,33 @@ Bootstrap(app)
 def get_account(id):
     return Account.query.get(id)
 
+
 @login_manager.unauthorized_handler
 def unauthorized_callback():
     return redirect(url_for("login"))
+
 
 @app.route("/account", methods=["GET"])
 @login_required
 def account():
     return render_template("account.html")
 
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("account"))
     form = LoginForm(request.form)
     if request.method == "POST" and form.validate():
         login_user(form.account)
         return redirect(url_for("account"))
     return render_template("login.html", form=form)
 
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("account"))
     form = SignUpForm(request.form)
     if request.method == "POST" and form.validate():
         password_hash = generate_password_hash(form.password.data)

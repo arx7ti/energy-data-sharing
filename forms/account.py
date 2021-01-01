@@ -2,9 +2,15 @@
 
 from models.account import Account
 from flask_wtf import Form
-from wtforms import Form, StringField, PasswordField, SubmitField, validators, ValidationError
+from wtforms import (
+    Form,
+    StringField,
+    PasswordField,
+    SubmitField,
+    validators,
+    ValidationError,
+)
 from werkzeug.security import check_password_hash
-
 
 
 class SignUpForm(Form):
@@ -19,6 +25,7 @@ class SignUpForm(Form):
     )
     confirm = PasswordField("Confirm password")
     submit = SubmitField("Register")
+
 
 class LoginForm(Form):
     email = StringField("Email", [validators.DataRequired()])
