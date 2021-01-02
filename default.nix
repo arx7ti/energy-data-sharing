@@ -7,7 +7,7 @@
 with pkgs;
 
 let
-  wtforms_stable = python37.pkgs.buildPythonPackage rec {
+  wtforms_stable = python3.pkgs.buildPythonPackage rec {
     pname = "WTForms";
     version = "2.3.3";
     src = fetchFromGitHub {
@@ -17,9 +17,9 @@ let
       sha256 = "0aix0655k8cbylpxi6lgyakigg51iy6bhj248g7d26d0mcpwl6mi";
     };
     doCheck = false;
-    propagatedBuildInputs = with python37Packages; [ markupsafe ];
+    propagatedBuildInputs = with python3Packages; [ markupsafe ];
   };
-  flask_wtf_stable = python37.pkgs.buildPythonPackage rec {
+  flask_wtf_stable = python3.pkgs.buildPythonPackage rec {
     pname = "Flask-WTF";
     version = "0.14.3";
     src = fetchFromGitHub {
@@ -29,7 +29,7 @@ let
       sha256 = "1qnda06f4lq453n5wzl430ywm2fqkppc2zgiw53z8k36jzhvb6xk";
     };
     doCheck = false;
-    propagatedBuildInputs = with python37Packages; [
+    propagatedBuildInputs = with python3Packages; [
       wtforms_stable
       itsdangerous
       flask
