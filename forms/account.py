@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
-from models.account import Account
+from flask_login import current_user
+from models.account import Account, Household
 from flask_wtf import Form
 from wtforms import (
     Form,
     StringField,
     PasswordField,
+    SelectField,
     SubmitField,
     validators,
     ValidationError,
 )
+from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from werkzeug.security import check_password_hash
 
 
@@ -52,6 +55,17 @@ class LoginForm(Form):
 
 
 class AddHouseholdForm(Form):
-    name = StringField("Name", [validators.Length(min=2, max=255)])
+    name = StringField("Name", [validators.Length(min=2, max=64)])
     address = StringField("Address", [validators.Length(min=6, max=320)])
     submit = SubmitField("Add household")
+
+
+def get_households():
+    return Household.query.filter_by(account_id=current_user.id)
+
+
+class AddSensorForm(Form):
+    name = StringField("Name", [validators.Length(min=2, max=64)])
+    household = QuerySelectField("Household", query_factory=get_households)
+    public_key = StringField("Public Key")
+    submit = SubmitField("Add sensor")

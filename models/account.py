@@ -23,7 +23,9 @@ class Account(UserMixin, db.Model):
 class Household(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False)
-    account = db.relationship("Account", backref=db.backref("accounts", lazy=True))
+    # account = db.relationship(
+    #     "Account", backref=db.backref("related_account", lazy=True)
+    # )
     name = db.Column(db.String(64), nullable=False)
     # region_id = db.Column(db.Integer, db.ForeignKey("region.id"), nullable=False)
     # region = db.relationship("Region", backref=db.backref("regions", lazy=True))
@@ -32,16 +34,16 @@ class Household(db.Model):
     address = db.Column(db.String(255), nullable=True, default="")
 
     def __repr__(self):
-        return "<%s@%s>" % (self.name, self.account.email)
+        return "<%s@%s>" % (self.name, self.address)
 
 
 class Sensor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
-    # household = db.relationship(
-    #     "Household", backref=db.backref("sensor_households", lazy=True)
-    # )
-    public_key = db.Column(db.String(255), unique=True, nullable=False)
+    household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
+    household = db.relationship(
+        "Household", backref=db.backref("sensor_household", lazy=True)
+    )
+    public_key = db.Column(db.String(255), unique=True, nullable=True)
     name = db.Column(db.String(64), nullable=False)
 
     def __repr__(self):
@@ -58,15 +60,15 @@ class ApplianceCategory(db.Model):
 
 class Appliance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
-    # household = db.relationship(
-    #     "Household", backref=db.backref("appliance_households", lazy=True)
-    # )
+    household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
+    household = db.relationship(
+        "Household", backref=db.backref("appliance_household", lazy=True)
+    )
     category_id = db.Column(
         db.Integer, db.ForeignKey("appliance_category.id"), nullable=False
     )
     category = db.relationship(
-        "ApplianceCategory", backref=db.backref("categories", lazy=True)
+        "ApplianceCategory", backref=db.backref("appliance_category", lazy=True)
     )
     name = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)

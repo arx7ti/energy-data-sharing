@@ -32,4 +32,34 @@
     </table>
     <!-- </div> -->
 </div>
+<h1 class="semi-bold mb-4">Sensors</h1>
+<div class="card px-3 py-3 mb-3">
+    <div class="mb-3"><a href="/account/add-sensor" class="btn btn-violet">Add sensor</a></div>
+    <!-- <div class="table-responsive"> -->
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">
+                Name</th>
+                <th scope="col">
+                Household</th>
+                <th scope="col">
+                Public Key</th>
+                <th scope="col">
+                Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for sensor in sensors %}
+                    <td>{{ sensor.name }}</td>
+                    <td>{{ sensor.household.name }}</td>
+                    <td>{{ sensor.public_key }}</td>
+                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    <!-- </div> -->
+</div>
 {% endblock %}

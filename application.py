@@ -2,8 +2,8 @@
 
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models.shared import db
-from models.account import Account, Household
-from forms.account import SignUpForm, LoginForm, AddHouseholdForm
+from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
+from forms.account import SignUpForm, LoginForm, AddHouseholdForm, AddSensorForm
 from flask_migrate import Migrate
 from flask_login import (
     LoginManager,
@@ -26,6 +26,9 @@ login_manager.init_app(app)
 migrate = Migrate(app, db)
 Bootstrap(app)
 
+# with app.app_context():
+#     db.create_all()
+
 
 @login_manager.user_loader
 def get_account(id):
@@ -40,7 +43,11 @@ def unauthorized_callback():
 @app.route("/account", methods=["GET"])
 @login_required
 def account():
-    context = {"households": Household.query.filter_by(account_id=current_user.id)}
+    households = Household.query.filter_by(account_id=current_user.id).all()
+    sensors = Sensor.query.filter(
+        Sensor.household_id.in_([household.id for household in households])
+    )
+    context = {"households": households, "sensors": sensors}
     return render_template("account.html", **context)
 
 
@@ -85,15 +92,28 @@ def add_household():
     form = AddHouseholdForm(request.form)
     if request.method == "POST" and form.validate():
         household = Household(
-            account_id=current_user.id,
-            account=current_user,
-            name=form.name.data,
-            address=form.address.data,
+            account_id=current_user.id, name=form.name.data, address=form.address.data,
         )
         db.session.add(household)
         db.session.commit()
         return redirect(url_for("account"))
     return render_template("add_household.html", form=form)
+
+
+@app.route("/account/add-sensor", methods=["GET", "POST"])
+@login_required
+def add_sensor():
+    form = AddSensorForm(request.form)
+    if request.method == "POST" and form.validate():
+        sensor = Sensor(
+            household_id=form.household.data.id,
+            name=form.name.data,
+            public_key=form.public_key.data,
+        )
+        db.session.add(sensor)
+        db.session.commit()
+        return redirect(url_for("account"))
+    return render_template("add_sensor.html", form=form)
 
 
 if __name__ == "__main__":
