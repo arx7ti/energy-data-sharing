@@ -5,6 +5,24 @@
     <div class="d-flex align-items-center"><b>{{ current_user.name }}</b> <a href="/logout" class="ml-1 badge btn-red">Logout</a></div>
         Email: {{ current_user.email }}
 </div>
+<div class="row">
+    <div class="col-xl-6">
+        <div class="card p-3 mb-3 card-violet">
+            <div class="d-flex align-items-center">
+               <i class="d-flex align-items-center justify-content-center fas fa-bolt"></i> 
+               <div class="ml-3"><b>1232 kWh consumed</b><br>Since 10.10.2021</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <a href="#" class="card p-3 mb-3 card-empty">
+            <div class="d-flex align-items-center">
+               <i class="d-flex align-items-center justify-content-center fas fa-layer-plus"></i> 
+               <div class="ml-3"><b>Add widget</b></div>
+            </div>
+        </a>
+    </div>
+</div>
 <h1 class="semi-bold mb-4">Households</h1>
 <div class="card px-3 py-3 mb-3">
     <div class="mb-3"><a href="/account/add-household" class="btn btn-violet">Add household</a></div>

@@ -58,6 +58,56 @@ a:hover {
   text-decoration: none;
 }
 
+.card-empty {
+  border: 3px dashed var(--gray-dark) !important;
+  background-color: transparent;
+  color: var(--gray-dark);
+}
+
+.card-empty div i {
+  color: var(--gray-dark);
+  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  font-size: 24pt;
+}
+
+.card-empty:hover {
+  border: 3px dashed var(--gray-dark) !important;
+  background-color: rgba(63, 66, 84, 0.033);
+  color: var(--gray-dark);
+  cursor: pointer;
+}
+
+.card-empty:hover div i {
+  color: var(--gray-dark);
+  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  font-size: 24pt;
+}
+
+.card-violet {
+  border: 3px solid var(--violet-soft) !important;
+  background-color: var(--violet-soft);
+  color: var(--violet);
+}
+
+.card-violet div i {
+  background-color: var(--violet);
+  color: white;
+  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  font-size: 24pt;
+}
+
+.card-red {
+  border-color: var(--red-soft) !important;
+  background-color: var(--red-soft);
+  color: var(--red);
+}
+
 .btn-violet {
   border-color: var(--violet-soft);
   background-color: var(--violet-soft);
@@ -126,7 +176,7 @@ h6 {
 
 .card {
   border-radius: 15px;
-  border-color: white;
+  border: 3px solid white;
 }
 
 .sidebar-block {
