@@ -37,21 +37,24 @@ let
   };
 in stdenv.mkDerivation rec {
   name = "development";
-  dependencies = [ python3 ] ++ (with python37Packages; [
-    black
-    requests
-    psycopg2
-    flask
-    flask-bootstrap
-    flask-restful
-    flask_migrate
-    flask-pymongo
-    flask_script
-    flask_mail
-    flask_login
-    flask_sqlalchemy
-    flask_wtf_stable
-  ]);
+  dependencies = [
+    (python37.withPackages (ps:
+      with ps; [
+        black
+        requests
+        psycopg2
+        flask
+        flask-bootstrap
+        flask-restful
+        flask_migrate
+        flask-pymongo
+        flask_script
+        flask_mail
+        flask_login
+        flask_sqlalchemy
+        flask_wtf_stable
+      ]))
+  ];
   env = buildEnv {
     name = name;
     paths = dependencies;
