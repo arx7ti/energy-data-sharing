@@ -3,7 +3,14 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models.shared import db
 from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
-from forms.account import SignUpForm, LoginForm, AddHouseholdForm, AddSensorForm
+from forms.account import (
+    SignUpForm,
+    LoginForm,
+    AddHouseholdForm,
+    AddSensorForm,
+    AddCategoryForm,
+    AddApplianceForm,
+)
 from flask_migrate import Migrate
 from flask_login import (
     LoginManager,
@@ -47,7 +54,16 @@ def account():
     sensors = Sensor.query.filter(
         Sensor.household_id.in_([household.id for household in households])
     )
-    context = {"households": households, "sensors": sensors}
+    categories = ApplianceCategory.query.all()
+    appliances = Appliance.query.filter(
+        Appliance.household_id.in_([household.id for household in households])
+    )
+    context = {
+        "households": households,
+        "sensors": sensors,
+        "categories": categories,
+        "appliances": appliances,
+    }
     return render_template("account.html", **context)
 
 
@@ -114,6 +130,36 @@ def add_sensor():
         db.session.commit()
         return redirect(url_for("account"))
     return render_template("add_sensor.html", form=form)
+
+
+@app.route("/account/add-category", methods=["GET", "POST"])
+@login_required
+def add_category():
+    form = AddCategoryForm(request.form)
+    if request.method == "POST" and form.validate():
+        category = ApplianceCategory(name=form.name.data,)
+        db.session.add(category)
+        db.session.commit()
+        return redirect(url_for("account"))
+    return render_template("add_category.html", form=form)
+
+
+@app.route("/account/add-appliance", methods=["GET", "POST"])
+@login_required
+def add_appliance():
+    form = AddApplianceForm(request.form)
+    if request.method == "POST" and form.validate():
+        appliance = Appliance(
+            household_id=form.household.data.id,
+            category_id=form.category.data.id,
+            name=form.name.data,
+            brand=form.brand.data,
+            power=form.power.data,
+        )
+        db.session.add(appliance)
+        db.session.commit()
+        return redirect(url_for("account"))
+    return render_template("add_appliance.html", form=form)
 
 
 if __name__ == "__main__":

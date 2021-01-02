@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from flask_login import current_user
-from models.account import Account, Household
+from models.account import Account, Household, ApplianceCategory
 from flask_wtf import Form
 from wtforms import (
     Form,
     StringField,
+    FloatField,
+    IntegerField,
     PasswordField,
     SelectField,
     SubmitField,
@@ -64,8 +66,26 @@ def get_households():
     return Household.query.filter_by(account_id=current_user.id)
 
 
+def get_categories():
+    return ApplianceCategory.query.all()
+
+
 class AddSensorForm(Form):
     name = StringField("Name", [validators.Length(min=2, max=64)])
     household = QuerySelectField("Household", query_factory=get_households)
     public_key = StringField("Public Key")
     submit = SubmitField("Add sensor")
+
+
+class AddCategoryForm(Form):
+    name = StringField("Name", [validators.Length(min=2, max=64)])
+    submit = SubmitField("Add category")
+
+
+class AddApplianceForm(Form):
+    household = QuerySelectField("Household", query_factory=get_households)
+    category = QuerySelectField("Category", query_factory=get_categories)
+    name = StringField("Name", [validators.Length(min=2, max=64)])
+    brand = StringField("Brand", [validators.Length(min=2, max=64)])
+    power = FloatField("Power", [validators.DataRequired()])
+    submit = SubmitField("Add appliance")
