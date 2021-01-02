@@ -82,7 +82,7 @@ def login():
     if request.method == "POST" and form.validate():
         login_user(form.account)
         return redirect(url_for("account"))
-    return render_template("login.html", form=form)
+    return render_template("form.html", heading="Login", form=form)
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -99,7 +99,7 @@ def signup():
         db.session.commit()
         login_user(account)
         return redirect(url_for("account"))
-    return render_template("signup.html", form=form)
+    return render_template("form.html", heading="Sing Up", form=form)
 
 
 @app.route("/account/add-household", methods=["GET", "POST"])
@@ -113,7 +113,7 @@ def add_household():
         db.session.add(household)
         db.session.commit()
         return redirect(url_for("account"))
-    return render_template("add_household.html", form=form)
+    return render_template("form.html", heading="Add Household", form=form)
 
 
 @app.route("/account/add-sensor", methods=["GET", "POST"])
@@ -129,7 +129,7 @@ def add_sensor():
         db.session.add(sensor)
         db.session.commit()
         return redirect(url_for("account"))
-    return render_template("add_sensor.html", form=form)
+    return render_template("form.html", heading="Add Sensor", form=form)
 
 
 @app.route("/account/add-category", methods=["GET", "POST"])
@@ -141,7 +141,7 @@ def add_category():
         db.session.add(category)
         db.session.commit()
         return redirect(url_for("account"))
-    return render_template("add_category.html", form=form)
+    return render_template("form.html", heading="Add Category", form=form)
 
 
 @app.route("/account/add-appliance", methods=["GET", "POST"])
@@ -159,7 +159,7 @@ def add_appliance():
         db.session.add(appliance)
         db.session.commit()
         return redirect(url_for("account"))
-    return render_template("add_appliance.html", form=form)
+    return render_template("form.html", heading="Add Appliance", form=form)
 
 
 if __name__ == "__main__":

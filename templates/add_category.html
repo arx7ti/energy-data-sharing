@@ -1,8 +1,0 @@
-{% extends 'layout.html' %}
-{% from 'macros/forms.html' import quick_form %}
-{% block content %}
-<h1 class="mb-4 semi-bold">Add Category</h1>
-<div class="card p-3 mb-3">
-    {{ quick_form(form, button_map={"submit": "red"}) }}
-</div>
-{% endblock %}
