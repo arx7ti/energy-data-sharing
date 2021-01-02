@@ -54,6 +54,8 @@ in stdenv.mkDerivation rec {
         flask_sqlalchemy
         flask_wtf_stable
       ]))
+    nodePackages.pyright
+    postgresql
   ];
   env = buildEnv {
     name = name;
