@@ -38,7 +38,7 @@ let
 in stdenv.mkDerivation rec {
   name = "development";
   dependencies = [
-    (python37.withPackages (ps:
+    (python38.withPackages (ps:
       with ps; [
         black
         requests
