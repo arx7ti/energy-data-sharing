@@ -33,7 +33,7 @@ class SignUpForm(Form):
 class LoginForm(Form):
     email = StringField("Email", [validators.DataRequired()])
     password = PasswordField("Password", [validators.DataRequired()])
-    submit = SubmitField("Register")
+    submit = SubmitField("Login")
 
     def __init__(self, *args, **kwargs):
         super(LoginForm, self).__init__(*args, **kwargs)
