@@ -58,13 +58,13 @@ a:hover {
   text-decoration: none;
 }
 
-.card-empty {
+.widget-empty {
   border: 3px dashed var(--gray-dark) !important;
   background-color: transparent;
   color: var(--gray-dark);
 }
 
-.card-empty div i {
+.widget-empty div i {
   color: var(--gray-dark);
   border-radius: 10px;
   width: 64px;
@@ -72,14 +72,14 @@ a:hover {
   font-size: 24pt;
 }
 
-.card-empty:hover {
+.widget-empty:hover {
   border: 3px dashed var(--gray-dark) !important;
   background-color: rgba(63, 66, 84, 0.033);
   color: var(--gray-dark);
   cursor: pointer;
 }
 
-.card-empty:hover div i {
+.widget-empty:hover div i {
   color: var(--gray-dark);
   border-radius: 10px;
   width: 64px;
@@ -87,13 +87,13 @@ a:hover {
   font-size: 24pt;
 }
 
-.card-violet {
+.widget-violet {
   border: 3px solid var(--violet-soft) !important;
   background-color: var(--violet-soft);
   color: var(--violet);
 }
 
-.card-violet div i {
+.widget-violet div i {
   background-color: var(--violet);
   color: white;
   border-radius: 10px;
@@ -102,7 +102,7 @@ a:hover {
   font-size: 24pt;
 }
 
-.card-red {
+.widget-red {
   border-color: var(--red-soft) !important;
   background-color: var(--red-soft);
   color: var(--red);
@@ -176,7 +176,7 @@ h6 {
 
 .card {
   border-radius: 15px;
-  border: 3px solid white;
+  border: 0;
 }
 
 .sidebar-block {
