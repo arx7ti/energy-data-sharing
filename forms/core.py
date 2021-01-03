@@ -22,3 +22,10 @@ class AddPageForm(Form):
     name = StringField("Name", [validators.Length(min=2, max=255)])
     content = TextAreaField("Content", [validators.DataRequired()])
     submit = SubmitField("Create page")
+
+
+class AddWidgetForm(Form):
+    name = StringField("Name", [validators.Length(min=2, max=255)])
+    shortcut = StringField("Shortcut", [validators.Length(min=2, max=32)])
+    description = TextAreaField("Content", [validators.DataRequired()])
+    submit = SubmitField("Add widget")

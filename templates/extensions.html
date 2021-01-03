@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+{% from 'macros/forms.html' import quick_form %}
+{% block content %}
+<h1 class="mb-4 semi-bold">{{ heading }}</h1>
+{% for widget in widgets %}
+<div class="card p-3 mb-3 widget-white">
+    <div class="d-flex align-items-center">
+        <a href="/widget/{{widget.slug}}"><i class="widget-icon-violet d-flex align-items-center justify-content-center fas fa-bolt"></i></a> 
+        <div class="ml-3">
+            <b><a href="/widget/{{widget.slug}}">{{ widget.name }}</a></b>
+            {% if widget in current_user.widgets %}
+                <span class="badge widget-aqua">Installed</span>
+            {% endif %}
+            <br>{{ widget.description }}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

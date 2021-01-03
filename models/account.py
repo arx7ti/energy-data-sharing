@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 
 from models.shared import db
+from models.core import Widget
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash
+
+account_widgets = db.Table(
+    "account_widgets",
+    db.Model.metadata,
+    db.Column("account_id", db.Integer, db.ForeignKey("account.id")),
+    db.Column("widget_id", db.Integer, db.ForeignKey("widget.id")),
+)
 
 
 class Account(UserMixin, db.Model):
@@ -12,6 +20,7 @@ class Account(UserMixin, db.Model):
     password = db.Column(db.String(255), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     name = db.Column(db.String(255), unique=False, nullable=False)
+    widgets = db.relationship("Widget", secondary=account_widgets)
 
     def check_password(self, password):
         return True if check_password_hash(self.password, password) else False

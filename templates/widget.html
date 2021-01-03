@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+{% from 'macros/forms.html' import quick_form %}
+{% block content %}
+<h1 class="mb-4 semi-bold">{{ heading }}</h1>
+<div class="card p-3 mb-3">
+    <b>This page is in development.</b>
+    <!-- <i class="widget-icon-violet d-flex align-items-center justify-content-center fas fa-bolt"></i>  -->
+    {{ widget.description }}
+    {% if widget not in current_user.widgets %}
+    <a href="/widget/install-widget/{{ widget.id }}" class="btn btn-violet">Install widget</a>
+    {% else %}
+    <a href="/widget/uninstall-widget/{{ widget.id }}" class="btn btn-red">Uninstall widget</a>
+    {% endif %}
+</div>
+{% endblock %}

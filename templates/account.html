@@ -39,18 +39,20 @@
     </ul>
 </div>
 <div class="row">
+    {% for widget in current_user.widgets %}
     <div class="col-xl-6" mr-3>
         <div class="card p-3 mb-3 widget-violet">
             <div class="d-flex align-items-center">
-               <i class="d-flex align-items-center justify-content-center fas fa-bolt"></i> 
+               <i class="widget-icon-violet d-flex align-items-center justify-content-center fas fa-bolt"></i> 
                <div class="ml-3"><b>1232 kWh consumed</b><br>Since 10.10.2021</div>
             </div>
         </div>
     </div>
+    {% endfor %}
     <div class="col-xl-6">
-        <a href="#" class="card p-3 mb-3 widget-empty">
+        <a href="/extensions" class="card p-3 mb-3 widget-empty">
             <div class="d-flex align-items-center">
-               <i class="d-flex align-items-center justify-content-center fas fa-layer-plus"></i> 
+               <i class="widget-icon-empty d-flex align-items-center justify-content-center fas fa-layer-plus"></i> 
                <div class="ml-3"><b>Add widget</b></div>
             </div>
         </a>
@@ -106,30 +108,6 @@
                     <td>{{ sensor.name }}<span class="ml-1 badge widget-aqua">Online</span></td>
                     <td>{{ sensor.household.name }}</td>
                     <td><span class="badge widget-orange">Verified</span></td>
-                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
-    <!-- </div> -->
-</div>
-<h1 class="semi-bold mb-4">Categories</h1>
-<div class="card px-3 py-3 mb-3">
-    <div class="mb-3"><a href="/account/add-category" class="btn btn-violet">Add category</a></div>
-    <!-- <div class="table-responsive"> -->
-    <table class="table">
-        <thead class="thead-light">
-            <tr>
-                <th scope="col">
-                Name</th>
-                <th scope="col">
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                {% for category in categories %}
-                    <td>{{ category.name }}</td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
                 {% endfor %}
             </tr>

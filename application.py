@@ -5,8 +5,8 @@ from slugify import slugify
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models.shared import db
 from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
-from models.core import Page
-from forms.core import AddPageForm
+from models.core import Page, Widget
+from forms.core import AddPageForm, AddWidgetForm
 from forms.account import (
     SignUpForm,
     LoginForm,
@@ -183,6 +183,59 @@ def add_page():
         db.session.commit()
         return redirect(url_for("page", slug=slug))
     return render_template("form.html", heading="Add Page", form=form)
+
+
+@app.route("/extensions")
+@login_required
+def extensions():
+    widgets = Widget.query.all()
+    heading = "Extensions"
+    return render_template("extensions.html", heading=heading, widgets=widgets)
+
+
+@app.route("/widget/<string:slug>")
+@login_required
+def widget(slug):
+    widget = Widget.query.filter_by(slug=slug).first()
+    heading = widget.name
+    return render_template("widget.html", heading=heading, widget=widget)
+
+
+@app.route("/widget/install-widget/<int:widget_id>")
+@login_required
+def install_widget(widget_id):
+    widget = Widget.query.get(widget_id)
+    current_user.widgets.append(widget)
+    db.session.add(widget)
+    db.session.commit()
+    return redirect(url_for("widget", slug=widget.slug))
+
+
+@app.route("/widget/uninstall-widget/<int:widget_id>")
+@login_required
+def uninstall_widget(widget_id):
+    widget = Widget.query.get(widget_id)
+    current_user.widgets.remove(widget)
+    db.session.commit()
+    return redirect(url_for("widget", slug=widget.slug))
+
+
+@app.route("/add-widget", methods=["GET", "POST"])
+@login_required
+def add_widget():
+    form = AddWidgetForm(request.form)
+    if request.method == "POST" and form.validate():
+        slug = slugify(form.name.data)
+        widget = Widget(
+            slug=slug,
+            name=form.name.data,
+            shortcut=form.shortcut.data,
+            description=form.description.data,
+        )
+        db.session.add(widget)
+        db.session.commit()
+        return redirect(url_for("extensions"))
+    return render_template("form.html", heading="Add Widget", form=form)
 
 
 @app.route("/monitor")

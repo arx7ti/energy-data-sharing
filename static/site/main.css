@@ -79,8 +79,34 @@ a:hover {
   cursor: pointer;
 }
 
-.widget-empty:hover div i {
+.widget-empty:hover .widget-icon-empty {
   color: var(--gray-dark);
+  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  font-size: 24pt;
+}
+
+.widget-white {
+  border: 3px solid white !important;
+  background-color: white;
+  color: var(--gray-dark);
+}
+
+.widget-white b a {
+  color: var(--gray-dark);
+}
+
+.widget-icon-large {
+  width: 128px !important;
+  height: 128px !important;
+  font-size: 48pt !important;
+  border-radius: 15px !important;
+}
+
+.widget-icon-violet {
+  background-color: var(--violet);
+  color: white;
   border-radius: 10px;
   width: 64px;
   height: 64px;
@@ -93,7 +119,7 @@ a:hover {
   color: var(--violet);
 }
 
-.widget-violet div i {
+.widget-icon-violet {
   background-color: var(--violet);
   color: white;
   border-radius: 10px;
