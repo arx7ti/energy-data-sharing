@@ -37,6 +37,8 @@ in
     dependencies = (with pkgs; [
       python3
     ]) ++ (with python37Packages; [
+      altair
+      python-slugify
       black
       requests
       psycopg2

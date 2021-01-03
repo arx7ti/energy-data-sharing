@@ -1,12 +1,45 @@
 {% extends 'layout.html' %}
 {% block content %}
 <h1 class="semi-bold mb-4">Account Management</h1>
-<div class="card p-3 mb-3">
-    <div class="d-flex align-items-center"><b>{{ current_user.name }}</b> <a href="/logout" class="ml-1 badge btn-red">Logout</a></div>
-        Email: {{ current_user.email }}
+<div class="card mb-3">
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item p-3">
+            <div class="row">
+                <div class="col-9 my-auto">
+                    <i class="fas fa-user mr-3"></i>Hello, <b>{{ current_user.name }}</b>
+                </div>
+                <div class="col-3 text-right">
+                    <a href="/logout" class="badge btn-red">Logout</a>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item p-3">
+            <div class="row">
+                <div class="col-8 my-auto">
+                    <i class="fas fa-envelope mr-3"></i>Email: <b>{{ current_user.email }}</b>
+                </div>
+                <div class="col-4 text-right">
+                    <a href="/account/edit" class="badge btn-violet">Edit info</a>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item p-3">
+            <div class="row">
+                <div class="col-8 my-auto">
+                    <i class="fas fa-bell mr-3"></i>Notifications<span class="ml-1 badge widget-red">+1</span>
+                </div>
+                <div class="col-4 text-right">
+                    <a href="/account/notifications" class="badge btn-violet">Read all</a>
+                </div>
+            </div>
+        </li>
+        <li class="list-group-item p-3">
+         <i class="fas fa-calendar-alt mr-3"></i>Date joined: <b>{{ current_user.date.strftime("%Y-%m-%d") }}</b>
+        </li>
+    </ul>
 </div>
 <div class="row">
-    <div class="col-xl-6">
+    <div class="col-xl-6" mr-3>
         <div class="card p-3 mb-3 widget-violet">
             <div class="d-flex align-items-center">
                <i class="d-flex align-items-center justify-content-center fas fa-bolt"></i> 
@@ -35,7 +68,7 @@
                 <th scope="col">
                 Address</th>
                 <th scope="col">
-                Action</th>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -43,7 +76,7 @@
                 {% for household in households %}
                     <td>{{ household.name }}</td>
                     <td>{{ household.address }}</td>
-                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
                 {% endfor %}
             </tr>
         </tbody>
@@ -62,18 +95,18 @@
                 <th scope="col">
                 Household</th>
                 <th scope="col">
-                Public Key</th>
+                Status</th>
                 <th scope="col">
-                Action</th>
+                </th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 {% for sensor in sensors %}
-                    <td>{{ sensor.name }}</td>
+                    <td>{{ sensor.name }}<span class="ml-1 badge widget-aqua">Online</span></td>
                     <td>{{ sensor.household.name }}</td>
-                    <td>{{ sensor.public_key }}</td>
-                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td><span class="badge widget-orange">Verified</span></td>
+                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
                 {% endfor %}
             </tr>
         </tbody>
@@ -90,14 +123,14 @@
                 <th scope="col">
                 Name</th>
                 <th scope="col">
-                Action</th>
+                </th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 {% for category in categories %}
                     <td>{{ category.name }}</td>
-                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
                 {% endfor %}
             </tr>
         </tbody>
@@ -122,7 +155,7 @@
                 <th scope="col">
                 Household</th>
                 <th scope="col">
-                Action</th>
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -131,9 +164,9 @@
                     <td>{{ appliance.name }}</td>
                     <td>{{ appliance.brand }}</td>
                     <td>{{ appliance.power }}</td>
-                    <td>{{ appliance.category }}</td>
-                    <td>{{ appliance.household }}</td>
-                    <td><a href="#" class="btn btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td>{{ appliance.category.name }}</td>
+                    <td>{{ appliance.household.name }}</td>
+                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
                 {% endfor %}
             </tr>
         </tbody>

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+import altair as alt
+from slugify import slugify
 from flask import Flask, render_template, request, flash, redirect, url_for
 from models.shared import db
 from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
+from models.core import Page
+from forms.core import AddPageForm
 from forms.account import (
     SignUpForm,
     LoginForm,
@@ -160,6 +164,88 @@ def add_appliance():
         db.session.commit()
         return redirect(url_for("account"))
     return render_template("form.html", heading="Add Appliance", form=form)
+
+
+@app.route("/page/<string:slug>")
+def page(slug):
+    page = Page.query.filter_by(slug=slug).first()
+    return render_template("page.html", heading=page.name, content=page.content)
+
+
+@app.route("/add-page", methods=["GET", "POST"])
+@login_required
+def add_page():
+    form = AddPageForm(request.form)
+    if request.method == "POST" and form.validate():
+        slug = slugify(form.name.data)
+        page = Page(slug=slug, name=form.name.data, content=form.content.data,)
+        db.session.add(page)
+        db.session.commit()
+        return redirect(url_for("page", slug=slug))
+    return render_template("form.html", heading="Add Page", form=form)
+
+
+@app.route("/monitor")
+@login_required
+def monitor():
+    # Create a selection that chooses the nearest point & selects based on x-value
+    nearest = alt.selection(
+        type="single", nearest=True, on="mouseover", fields=["date"], empty="none"
+    )
+
+    # The basic line
+    line = (
+        alt.Chart()
+        .mark_line(interpolate="basis")
+        .encode(
+            alt.X("date:T", axis=alt.Axis(title="")),
+            alt.Y("price:Q", axis=alt.Axis(title="", format="$f")),
+            color="symbol:N",
+        )
+    )
+
+    # Transparent selectors across the chart. This is what tells us
+    # the x-value of the cursor
+    selectors = (
+        alt.Chart()
+        .mark_point()
+        .encode(x="date:T", opacity=alt.value(0),)
+        .add_selection(nearest)
+    )
+
+    # Draw points on the line, and highlight based on selection
+    points = line.mark_point().encode(
+        opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+    )
+
+    # Draw text labels near the points, and highlight based on selection
+    text = line.mark_text(align="left", dx=5, dy=-5).encode(
+        text=alt.condition(nearest, "price:Q", alt.value(" "))
+    )
+
+    # Draw a rule at the location of the selection
+    rules = (
+        alt.Chart()
+        .mark_rule(color="gray")
+        .encode(x="date:T",)
+        .transform_filter(nearest)
+    )
+
+    # Put the five layers into a chart and bind the data
+    stockChart = alt.layer(
+        line,
+        selectors,
+        points,
+        rules,
+        text,
+        data="https://raw.githubusercontent.com/altair-viz/vega_datasets/master/vega_datasets/_data/stocks.csv",
+        width=600,
+        height=300,
+        title="Stock History",
+    )
+    return render_template(
+        "monitor.html", heading="Monitor", chart=stockChart.to_html()
+    )
 
 
 if __name__ == "__main__":

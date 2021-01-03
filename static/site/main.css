@@ -108,6 +108,46 @@ a:hover {
   color: var(--red);
 }
 
+.widget-aqua {
+  border-color: var(--aqua-soft) !important;
+  background-color: var(--aqua-soft);
+  color: var(--aqua);
+}
+
+.widget-orange {
+  border-color: var(--orange-soft) !important;
+  background-color: var(--orange-soft);
+  color: var(--orange);
+}
+.link-red {
+  color: var(--red);
+  border-bottom: 3px dashed var(--red);
+}
+
+.link-red:hover {
+  color: var(--red);
+  padding-bottom: 2px;
+  border-bottom: 1px dashed transparent;
+}
+
+.link-violet {
+  color: var(--violet);
+}
+
+.link:hover {
+  color: var(--violet);
+  text-decoration: underline;
+}
+
+.link-black {
+  color: var(--gray-dark);
+  font-weight: bold;
+}
+
+.just-table-icon {
+  padding: 0 0.375rem;
+}
+
 .btn-violet {
   border-color: var(--violet-soft);
   background-color: var(--violet-soft);
@@ -179,6 +219,11 @@ h6 {
   border: 0;
 }
 
+.list-group {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
 .sidebar-block {
 }
 
@@ -233,6 +278,12 @@ h6 {
 .table td,
 .table th {
   border-color: transparent;
+  font-size: 14pt;
+}
+
+.table td i,
+.table th i {
+  font-size: 14pt;
 }
 
 .table th {
