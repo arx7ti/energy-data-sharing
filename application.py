@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 
+import io
+from itertools import chain
+import torch
+import pandas as pd
 import altair as alt
+import numpy as np
+from numpy import fromstring, float32, frombuffer, asarray
+from deep.attentions import Model
 from slugify import slugify
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from models.shared import db
 from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
 from models.core import Page, Widget
+from models.monitor import Classifier
 from forms.core import AddPageForm, AddWidgetForm
 from forms.account import (
     SignUpForm,
@@ -27,6 +35,7 @@ from flask_bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash
 from wtforms import ValidationError
 
+classes = ["kettle", "lightbulb", "microwave"]
 
 app = Flask(__name__)
 app.secret_key = "something"
@@ -238,67 +247,57 @@ def add_widget():
     return render_template("form.html", heading="Add Widget", form=form)
 
 
+model = Model(3)
+model.load_state_dict(
+    torch.load(
+        "../py/hy-nilm/store/model-attentions-4b2d236d4ecd4be07d55fe35ecd862b8.pth"
+    )["weights"]
+)
+
+
+@app.route("/push", methods=["POST"])
+def push_signal():
+    data = request.json["signal"]
+    count = request.json["count"]
+    email = request.json["email"]
+    # signal = fromstring(data, float32)
+    signal = asarray(data, dtype="float32")
+    output = model(torch.tensor(signal).unsqueeze(0)).squeeze(0).detach().numpy()
+    predictions = Classifier(
+        account_id=Account.query.filter_by(email=email).first().id,
+        # predictions=torch.where(output > 0.29, torch.tensor(1), torch.tensor(0))
+        predictions=output.tostring(),
+    )
+    db.session.add(predictions)
+    db.session.commit()
+    response = {"status": True, "shape": output.shape}
+    return jsonify(response)
+
+
 @app.route("/monitor")
 @login_required
 def monitor():
-    # Create a selection that chooses the nearest point & selects based on x-value
-    nearest = alt.selection(
-        type="single", nearest=True, on="mouseover", fields=["date"], empty="none"
+    predictions = list(Classifier.query.filter_by(account_id=current_user.id).all())
+    predictions = [
+        # np.where(
+        fromstring(x.predictions, dtype="float32", count=300).reshape(100, 3)
+        #     > 0.29,
+        #     1,
+        #     0,
+        # )
+        for x in predictions
+    ]
+    source = pd.DataFrame(chain(*predictions), columns=classes)
+    print(source)
+    base_chart = (
+        alt.Chart(source.reset_index())
+        .mark_line()
+        .transform_fold(fold=classes, as_=["variable", "value"])
+        .encode(x="index", y="value:Q", color="variable:N")
+        .properties(width=500)
     )
-
-    # The basic line
-    line = (
-        alt.Chart()
-        .mark_line(interpolate="basis")
-        .encode(
-            alt.X("date:T", axis=alt.Axis(title="")),
-            alt.Y("price:Q", axis=alt.Axis(title="", format="$f")),
-            color="symbol:N",
-        )
-    )
-
-    # Transparent selectors across the chart. This is what tells us
-    # the x-value of the cursor
-    selectors = (
-        alt.Chart()
-        .mark_point()
-        .encode(x="date:T", opacity=alt.value(0),)
-        .add_selection(nearest)
-    )
-
-    # Draw points on the line, and highlight based on selection
-    points = line.mark_point().encode(
-        opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-    )
-
-    # Draw text labels near the points, and highlight based on selection
-    text = line.mark_text(align="left", dx=5, dy=-5).encode(
-        text=alt.condition(nearest, "price:Q", alt.value(" "))
-    )
-
-    # Draw a rule at the location of the selection
-    rules = (
-        alt.Chart()
-        .mark_rule(color="gray")
-        .encode(x="date:T",)
-        .transform_filter(nearest)
-    )
-
-    # Put the five layers into a chart and bind the data
-    stockChart = alt.layer(
-        line,
-        selectors,
-        points,
-        rules,
-        text,
-        data="https://raw.githubusercontent.com/altair-viz/vega_datasets/master/vega_datasets/_data/stocks.csv",
-        width=600,
-        height=300,
-        title="Stock History",
-    )
-    return render_template(
-        "monitor.html", heading="Monitor", chart=stockChart.to_html()
-    )
+    chart = base_chart.to_html()
+    return render_template("monitor.html", heading="Monitor", chart=chart)
 
 
 if __name__ == "__main__":

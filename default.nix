@@ -37,6 +37,7 @@ in
     dependencies = (with pkgs; [
       python3
     ]) ++ (with python37Packages; [
+      pandas
       altair
       python-slugify
       black
@@ -52,6 +53,8 @@ in
       flask_login
       flask_sqlalchemy
       flask_wtf_stable
+    ]) ++ (with unstable.python37Packages; [
+      pytorch-bin 
     ]);
     env = buildEnv {
       name = name;
