@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import io
+from kernel.store import categories
 from itertools import chain
 import torch
 import pandas as pd
@@ -11,7 +12,7 @@ from deep.attentions import Model
 from slugify import slugify
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 from models.shared import db
-from models.account import Account, Household, Sensor, ApplianceCategory, Appliance
+from models.account import Account, Household, Sensor, Appliance
 from models.core import Page, Widget
 from models.monitor import Classifier
 from forms.core import AddPageForm, AddWidgetForm
@@ -20,7 +21,6 @@ from forms.account import (
     LoginForm,
     AddHouseholdForm,
     AddSensorForm,
-    AddCategoryForm,
     AddApplianceForm,
 )
 from flask_migrate import Migrate
@@ -68,14 +68,12 @@ def account():
     sensors = Sensor.query.filter(
         Sensor.household_id.in_([household.id for household in households])
     )
-    categories = ApplianceCategory.query.all()
     appliances = Appliance.query.filter(
         Appliance.household_id.in_([household.id for household in households])
     )
     context = {
         "households": households,
         "sensors": sensors,
-        "categories": categories,
         "appliances": appliances,
     }
     return render_template("account.html", **context)
@@ -146,18 +144,6 @@ def add_sensor():
     return render_template("form.html", heading="Add Sensor", form=form)
 
 
-@app.route("/account/add-category", methods=["GET", "POST"])
-@login_required
-def add_category():
-    form = AddCategoryForm(request.form)
-    if request.method == "POST" and form.validate():
-        category = ApplianceCategory(name=form.name.data,)
-        db.session.add(category)
-        db.session.commit()
-        return redirect(url_for("account"))
-    return render_template("form.html", heading="Add Category", form=form)
-
-
 @app.route("/account/add-appliance", methods=["GET", "POST"])
 @login_required
 def add_appliance():
@@ -165,7 +151,7 @@ def add_appliance():
     if request.method == "POST" and form.validate():
         appliance = Appliance(
             household_id=form.household.data.id,
-            category_id=form.category.data.id,
+            category=form.category.data,
             name=form.name.data,
             brand=form.brand.data,
             power=form.power.data,
@@ -277,10 +263,6 @@ def push_signal():
     return jsonify(response)
 
 
-def moving_average(x, w):
-    return np.convolve(x, np.ones(w), "same") / w
-
-
 @app.route("/monitor")
 @login_required
 def monitor():
@@ -300,9 +282,11 @@ def monitor():
     base_chart = (
         alt.Chart(source.reset_index())
         .mark_line()
-        .transform_fold(fold=classes, as_=["variable", "value"])
-        .encode(x="index", y="value:Q", color="variable:N")
-        .properties(width=500)
+        .transform_fold(fold=classes, as_=["classes", "value"])
+        .encode(x="index", y="value:Q", color="classes:N")
+        .properties(width=730)
+        .configure_axis(titleFontSize=18)
+        .configure_legend(orient="bottom", labelFontSize=18, titleFontSize=18)
     )
     chart = base_chart.to_html()
     return render_template("monitor.html", heading="Monitor", chart=chart)

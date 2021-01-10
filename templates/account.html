@@ -74,13 +74,13 @@
             </tr>
         </thead>
         <tbody>
+            {% for household in households %}
             <tr>
-                {% for household in households %}
                     <td>{{ household.name }}</td>
                     <td>{{ household.address }}</td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
-                {% endfor %}
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     <!-- </div> -->
@@ -103,14 +103,14 @@
             </tr>
         </thead>
         <tbody>
+            {% for sensor in sensors %}
             <tr>
-                {% for sensor in sensors %}
                     <td>{{ sensor.name }}<span class="ml-1 badge widget-aqua">Online</span></td>
                     <td>{{ sensor.household.name }}</td>
                     <td><span class="badge widget-orange">Verified</span></td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
-                {% endfor %}
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     <!-- </div> -->
@@ -137,16 +137,16 @@
             </tr>
         </thead>
         <tbody>
+            {% for appliance in appliances %}
             <tr>
-                {% for appliance in appliances %}
                     <td>{{ appliance.name }}</td>
                     <td>{{ appliance.brand }}</td>
                     <td>{{ appliance.power }}</td>
-                    <td>{{ appliance.category.name }}</td>
+                    <td>{{ appliance.category }}</td>
                     <td>{{ appliance.household.name }}</td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
-                {% endfor %}
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     <!-- </div> -->

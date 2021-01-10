@@ -59,26 +59,13 @@ class Sensor(db.Model):
         return "<%s@%s>" % (self.name, self.household.name)
 
 
-class ApplianceCategory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
-
-    def __repr__(self):
-        return "<%s>" % self.name
-
-
 class Appliance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
     household = db.relationship(
         "Household", backref=db.backref("appliance_household", lazy=True)
     )
-    category_id = db.Column(
-        db.Integer, db.ForeignKey("appliance_category.id"), nullable=False
-    )
-    category = db.relationship(
-        "ApplianceCategory", backref=db.backref("appliance_category", lazy=True)
-    )
+    category = db.Column(db.String(64), nullable=True)
     name = db.Column(db.String(64), nullable=False)
     brand = db.Column(db.String(64), nullable=False)
     power = db.Column(db.Float, nullable=True, default=1.0)

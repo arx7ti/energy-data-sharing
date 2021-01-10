@@ -2,7 +2,6 @@
 
 from models.shared import db
 from datetime import datetime
-from models.account import ApplianceCategory
 
 
 class Classifier(db.Model):
