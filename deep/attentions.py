@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 
-# from matplotlib import pyplot
-# from scipy.signal import resample
+from scipy.signal import resample, resample_poly
 from torch.nn.functional import relu
 from numpy import concatenate, greater, diff, where
 from torch.nn import (
@@ -26,8 +25,7 @@ from torch.nn import (
     Softmax,
 )
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-
-# from torch.fft import rfft, fft
+from torch.fft import rfft, fft
 from torch.nn.functional import (
     l1_loss,
     cross_entropy,
@@ -88,11 +86,6 @@ x5 = 100 * sin(2 * 3.14 * 500 * t1.to(dtype=float32))
 y1 = ones(1000)
 y0 = zeros(1000)
 x = cat([x1, x2, x3, x1, x5])
-# y_1 = cat([y1, y0, y0, y1, y1])
-# y_2 = cat([y0, y1, y0, y0, y1])
-# y_3 = cat([y0, y0, y1, y0, y1])
-# y_4 = cat([y0, y0, y1, y0, y1])
-# y_5 = cat([y0, y0, y1, y0, y1])
 y = cat([y0, y1, y1, y0, y1])
 x = stack(5 * [x])
 y = stack(5 * [y])
@@ -218,7 +211,6 @@ class MultiHeadAttention(Module):
         attention = self.ffn(attention)
         attention = self.dropout(attention)
         attention = self.norm(attention + residual)
-        # print("attention:", attention.shape)
         return attention
 
 
@@ -235,52 +227,23 @@ class Model(Module):
             ResidualBlock(32, 64, 3),
             ResidualBlock(64, 64, 3),
             # ResidualBlock(64, 64, 3),
-            # ResidualBlock(64, 64, 3),
             AvgPool2d((4, 2)),
             ResidualBlock(64, 128, 3),
             ResidualBlock(128, 128, 3),
             # ResidualBlock(128, 128, 3),
-            # ResidualBlock(128, 128, 3),
-            # ResidualBlock(128, 128, 3),
-            # ConvTranspose2d(256, 256, (1, 8), (1, 8)),
-            # ResidualBlock(256, 256, 3),
         )
-        self.avg_pool = AvgPool2d((4, 2))
-        self.max_pool = MaxPool2d((4, 2))
-        self.embedding = Sequential(ConvTranspose2d(128, 128, (1, 4), (1, 4)))
-        # self.encoder = Sequential(
-        #     ResNextBlock(1, 4, 5, groups=4),
-        #     # ResNextBlock(16, 16, 5, groups=4),
-        #     AvgPool2d((4, 2)),
-        #     ResNextBlock(32, 8, 3, groups=4),
-        #     # ResNextBlock(32, 32, 3, groups=4),
-        #     AvgPool2d((4, 2)),
-        #     ResNextBlock(64, 16, 3, groups=4),
-        #     # ResNextBlock(64, 64, 3, groups=4),
-        #     AvgPool2d((4, 2)),
-        #     ResNextBlock(128, 32, 3, groups=4),
-        #     # ResNextBlock(128, 128, 3, groups=4),
-        # )
+        self.avg_pool = AvgPool2d((4, 50))
+        self.max_pool = MaxPool2d((4, 50))
+        self.embedding = ConvTranspose2d(128, 128, (1, 50), stride=(1, 2))
         self.attention1 = MultiHeadAttention(128, 2, 64, 64)
         self.ffn1 = Sequential(Linear(128, 64), ReLU(True), Linear(64, 128))
-        # self.attention2 = MultiHeadAttention(256, 4, 64, 64)
-        # self.ffn2 = Sequential(Linear(256, 64), ReLU(True), Linear(64, 256))
-        # self.transformer = Transformer(
-        #     d_model=128,
-        #     nhead=2,
-        #     num_encoder_layers=3,
-        #     num_decoder_layers=3,
-        #     dim_feedforward=512,
-        # )
         self.labels = Sequential(
             Linear(128, 128), ReLU(True), Linear(128, nloads), Sigmoid(),
         )
         self.norm1 = LayerNorm(128, eps=1e-6)
         self.dropout1 = Dropout(0.1)
-        # self.norm2 = LayerNorm(256, eps=1e-6)
-        # self.dropout2 = Dropout(0.1)
 
-    def forward(self, x, t=None):
+    def forward(self, x):
         # win_len = 63
         win_len = 127
         hop_size = 25
@@ -290,23 +253,20 @@ class Model(Module):
             n_fft=win_len,
             hop_length=hop_size,
             window=hann_window(win_len).to(device=x.device),
-            # return_complex=True,
+            return_complex=True,
             normalized=True,
         )
-        x = sqrt(x[..., 0].pow(2) + x[..., 1].pow(2))
         # print("stft:", x.shape)
-        # x = tensor_abs(x)
+        x = tensor_abs(x)
         x = unsqueeze(x, 1)
         x = self.norm0(x)
         y = self.encoder(x)
+        # print("backbone:", y.shape)
         y_m = self.max_pool(y)
         y_a = self.avg_pool(y)
         y = self.embedding(y_m + y_a)
-        # y = y_m + y_a
         # print("backbone:", y.shape)
         bs, chls, freqs, frames = y.size()
-        # s = y.permute(-1, 0, 1, 2)
-        # s = s.contiguous().reshape(frames, bs, freqs * chls)
         s = y.permute(0, 3, 1, 2)
         s = s.contiguous().reshape(bs, frames, freqs * chls)
         # print("sequence:", s.shape)
@@ -314,16 +274,13 @@ class Model(Module):
         r = a
         a = self.dropout1(self.ffn1(a))
         a = self.norm1(a + r)
-        # a = self.attention2(a, a, a)
-        # r = a
-        # a = self.dropout2(self.ffn2(a))
-        # a = self.norm2(a + r)
-        # a = self.transformer(s, zeros_like(s)).permute(1, 0, -1)
         # print(a.shape)
         l = self.labels(a)
-        # t = t[:, :: (0 + t.size(1) // l.size(1))]
         return l
 
 
+# print(x.shape)
 # m = Model(3)
-# m(x, y)
+# m(x)
+# pyplot.plot(resample(y[0], 1, 6))
+# pyplot.show()

@@ -35,7 +35,8 @@ from flask_bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash
 from wtforms import ValidationError
 
-classes = ["kettle", "lightbulb", "microwave"]
+classes = ["charger", "fan", "iron", "kettle", "ledlight"]
+
 
 app = Flask(__name__)
 app.secret_key = "something"
@@ -247,12 +248,13 @@ def add_widget():
     return render_template("form.html", heading="Add Widget", form=form)
 
 
-model = Model(3)
+model = Model(55)
 model.load_state_dict(
     torch.load(
-        "../py/hy-nilm/store/model-attentions-4b2d236d4ecd4be07d55fe35ecd862b8.pth"
+        "../deep-nilm/store/model-attentions-0b48121a1172d2dc1340002503aafcdc.pth"
     )["weights"]
 )
+model.eval()
 
 
 @app.route("/push", methods=["POST"])
@@ -262,7 +264,8 @@ def push_signal():
     email = request.json["email"]
     # signal = fromstring(data, float32)
     signal = asarray(data, dtype="float32")
-    output = model(torch.tensor(signal).unsqueeze(0)).squeeze(0).detach().numpy()
+    with torch.no_grad():
+        output = model(torch.tensor(signal).unsqueeze(0)).squeeze(0).detach().numpy()
     predictions = Classifier(
         account_id=Account.query.filter_by(email=email).first().id,
         # predictions=torch.where(output > 0.29, torch.tensor(1), torch.tensor(0))
@@ -270,8 +273,12 @@ def push_signal():
     )
     db.session.add(predictions)
     db.session.commit()
-    response = {"status": True, "shape": output.shape}
+    response = {"status": True}
     return jsonify(response)
+
+
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), "same") / w
 
 
 @app.route("/monitor")
@@ -279,16 +286,17 @@ def push_signal():
 def monitor():
     predictions = list(Classifier.query.filter_by(account_id=current_user.id).all())
     predictions = [
-        # np.where(
-        fromstring(x.predictions, dtype="float32", count=300).reshape(100, 3)
-        #     > 0.29,
-        #     1,
-        #     0,
-        # )
+        np.where(
+            fromstring(
+                x.predictions, dtype="float32", count=100 * len(classes)
+            ).reshape(100, len(classes))
+            > 0.29,
+            1,
+            0,
+        )
         for x in predictions
     ]
     source = pd.DataFrame(chain(*predictions), columns=classes)
-    print(source)
     base_chart = (
         alt.Chart(source.reset_index())
         .mark_line()
