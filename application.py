@@ -10,15 +10,25 @@ import numpy as np
 from numpy import fromstring, float32, frombuffer, asarray
 from deep.attentions import Model
 from slugify import slugify
-from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    flash,
+    redirect,
+    url_for,
+    jsonify,
+    abort,
+)
 from models.shared import db
-from models.account import Account, Household, Sensor, Appliance
+from models.account import Account, Household, Sensor, Appliance, Category
 from models.core import Page, Widget
 from models.monitor import Classifier
 from forms.core import AddPageForm, AddWidgetForm
 from forms.account import (
     SignUpForm,
     LoginForm,
+    AddCategoryForm,
     AddHouseholdForm,
     AddSensorForm,
     AddApplianceForm,
@@ -34,8 +44,6 @@ from flask_login import (
 from flask_bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash
 from wtforms import ValidationError
-
-classes = ["charger", "fan", "iron", "kettle", "ledlight"]
 
 
 app = Flask(__name__)
@@ -68,13 +76,13 @@ def account():
     sensors = Sensor.query.filter(
         Sensor.household_id.in_([household.id for household in households])
     )
-    appliances = Appliance.query.filter(
-        Appliance.household_id.in_([household.id for household in households])
+    account_categories = Category.query.filter(
+        Category.household_id.in_([household.id for household in households])
     )
     context = {
         "households": households,
         "sensors": sensors,
-        "appliances": appliances,
+        "categories": account_categories,
     }
     return render_template("account.html", **context)
 
@@ -120,7 +128,11 @@ def add_household():
     form = AddHouseholdForm(request.form)
     if request.method == "POST" and form.validate():
         household = Household(
-            account_id=current_user.id, name=form.name.data, address=form.address.data,
+            account_id=current_user.id,
+            slug=slugify(form.name.data),
+            name=form.name.data,
+            address=form.address.data,
+            favorite=form.favorite.data,
         )
         db.session.add(household)
         db.session.commit()
@@ -142,6 +154,22 @@ def add_sensor():
         db.session.commit()
         return redirect(url_for("account"))
     return render_template("form.html", heading="Add Sensor", form=form)
+
+
+@app.route("/account/add-category", methods=["GET", "POST"])
+@login_required
+def add_category():
+    form = AddCategoryForm(request.form)
+    if request.method == "POST" and form.validate():
+        category = Category(
+            household_id=form.household.data.id,
+            household=form.household.data,
+            name=form.category.data,
+        )
+        db.session.add(category)
+        db.session.commit()
+        return redirect(url_for("account"))
+    return render_template("form.html", heading="Add Category", form=form)
 
 
 @app.route("/account/add-appliance", methods=["GET", "POST"])
@@ -247,15 +275,17 @@ model.eval()
 def push_signal():
     data = request.json["signal"]
     count = request.json["count"]
-    email = request.json["email"]
+    public_key = request.json["public_key"]
     # signal = fromstring(data, float32)
     signal = asarray(data, dtype="float32")
     with torch.no_grad():
         output = model(torch.tensor(signal).unsqueeze(0)).squeeze(0).detach().numpy()
+    sensor = Sensor.query.filter_by(public_key=public_key).first()
+    if not sensor:
+        response = {"status": False, "message": "Sensor was not found."}
+        return jsonify(response)
     predictions = Classifier(
-        account_id=Account.query.filter_by(email=email).first().id,
-        # predictions=torch.where(output > 0.29, torch.tensor(1), torch.tensor(0))
-        predictions=output.tostring(),
+        sensor_id=sensor.id, sensor=sensor, predictions=output.tostring(),
     )
     db.session.add(predictions)
     db.session.commit()
@@ -263,33 +293,118 @@ def push_signal():
     return jsonify(response)
 
 
-@app.route("/monitor")
-@login_required
-def monitor():
-    predictions = list(Classifier.query.filter_by(account_id=current_user.id).all())
+# @app.route("/monitor/<string:household_name>")
+# @login_required
+# def monitor_household(household_name):
+#     return render_template("monitor.html", heading="Monitor", chart=chart)
+
+
+def render_chart(sensor_id, related_categories_query):
+    related_categories = sorted(
+        list(map(lambda query: query.name, related_categories_query))
+    )
+    pointer = [
+        index
+        for index, category in enumerate(categories.values())
+        if category in related_categories
+    ]
+    predictions = list(
+        Classifier.query.filter_by(sensor_id=sensor_id)
+        .order_by(Classifier.date.desc())
+        .limit(12)
+    )[::-1]
     predictions = [
-        np.where(
-            fromstring(
-                x.predictions, dtype="float32", count=100 * len(classes)
-            ).reshape(100, len(classes))
-            > 0.29,
-            1,
-            0,
-        )
+        # np.where(
+        fromstring(x.predictions, dtype="float32", count=50 * len(categories)).reshape(
+            50, len(categories)
+        )[:, pointer]
+        #     > 0.19,
+        #     1,
+        #     0,
+        # )
         for x in predictions
     ]
-    source = pd.DataFrame(chain(*predictions), columns=classes)
+    source = pd.DataFrame(chain(*predictions), columns=related_categories)
+
     base_chart = (
         alt.Chart(source.reset_index())
-        .mark_line()
-        .transform_fold(fold=classes, as_=["classes", "value"])
-        .encode(x="index", y="value:Q", color="classes:N")
-        .properties(width=730)
-        .configure_axis(titleFontSize=18)
-        .configure_legend(orient="bottom", labelFontSize=18, titleFontSize=18)
+        .mark_circle(size=32)
+        .transform_fold(fold=related_categories, as_=["categories", "value"])
+        .encode(
+            x="index:Q",
+            y=alt.Y("categories:N", axis=alt.Axis(title=None)),
+            # color="value:Q",
+            tooltip=[
+                alt.Tooltip("value:Q", format=".2f"),
+                alt.Tooltip("index:Q", format="d"),
+            ],
+            color=alt.Color(
+                "value:Q",
+                scale=alt.Scale(
+                    domain=[0, 0.5, 1],
+                    # range=["#ffffff", "#e7dcfe", "#cfb9fd", "#ac84fc", "#8950fc"],
+                    range=["#ffffff", "#000000"],
+                    type="linear",
+                ),
+                legend=None,
+            ),
+        )
+        .properties(width=625, height=40 * len(related_categories))
+        .configure_axis(titleFontSize=14, labelFontSize=14)
+        # .configure_view(strokeOpacity=0)
+        # .interactive()
+        # .configure_legend(orient="bottom", labelFontSize=18, titleFontSize=18)
     )
-    chart = base_chart.to_html()
-    return render_template("monitor.html", heading="Monitor", chart=chart)
+    selection = alt.selection_single(
+        fields=["index"], nearest=True, on="mouseover", empty="none", clear="mouseout"
+    )
+    return base_chart.to_html() if len(predictions) > 0 else None
+
+
+@app.route("/monitor", defaults={"household_slug": None})
+@app.route("/monitor/<string:household_slug>")
+@login_required
+def monitor(household_slug):
+    # Look up for given household
+    if household_slug is not None:
+        household_by_query = Household.query.filter_by(
+            account_id=current_user.id, slug=household_slug
+        ).first()
+        # Raise 404 error if does not exist
+        if not household_by_query:
+            abort(404)
+
+    folds = []
+    for household in list(
+        Household.query.filter(
+            Household.account_id == current_user.id,
+            Household.slug != household_by_query.slug,
+        )
+    ) + [household_by_query]:
+        folds += [
+            {
+                "household_slug": household.slug,
+                "household_name": household.name,
+                "active": True if household.slug == household_by_query.slug else False,
+            }
+        ]
+    folds = sorted(folds, key=lambda fold: fold["household_name"])
+
+    sensors = {}
+    for sensor in Sensor.query.filter_by(household_id=household_by_query.id):
+        related_categories_query = Category.query.filter_by(
+            household_id=household_by_query.id
+        )
+        sensors[sensor.name] = {}
+        sensors[sensor.name]["chart"] = render_chart(
+            sensor.id, related_categories_query
+        )
+
+    return render_template(
+        "monitor.html", heading="Monitor", folds=folds, sensors=sensors
+    )
+    # return render_template("monitor.html", heading="Monitor", chart=chart)
+    # return redirect(url_for("monitor_household"))
 
 
 if __name__ == "__main__":

@@ -180,10 +180,15 @@ a:hover {
   color: var(--violet);
 }
 
-.btn-violet:hover {
+.btn-violet:hover,
+.btn-violet.active {
   border-color: var(--violet);
   background-color: var(--violet);
   color: white;
+}
+
+.btn-violet.active {
+  cursor: default;
 }
 
 .btn-red {

@@ -31,6 +31,7 @@ class Account(UserMixin, db.Model):
 
 class Household(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(255), unique=True, nullable=False)
     account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False)
     # account = db.relationship(
     #     "Account", backref=db.backref("related_account", lazy=True)
@@ -57,6 +58,15 @@ class Sensor(db.Model):
 
     def __repr__(self):
         return "<%s@%s>" % (self.name, self.household.name)
+
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    household_id = db.Column(db.Integer, db.ForeignKey("household.id"), nullable=False)
+    household = db.relationship(
+        "Household", backref=db.backref("category_household", lazy=True)
+    )
+    name = db.Column(db.String(64), nullable=False)
 
 
 class Appliance(db.Model):

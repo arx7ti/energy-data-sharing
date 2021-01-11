@@ -106,7 +106,7 @@
             {% for sensor in sensors %}
             <tr>
                     <td>{{ sensor.name }}<span class="ml-1 badge widget-aqua">Online</span></td>
-                    <td>{{ sensor.household.name }}</td>
+                    <td>{{ sensor.household.name }} {{ sensor.public_key }}</td>
                     <td><span class="badge widget-orange">Verified</span></td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
             </tr>
@@ -115,9 +115,9 @@
     </table>
     <!-- </div> -->
 </div>
-<h2 class="semi-bold mb-4">Appliances</h2>
+<h2 class="semi-bold mb-4">Categories</h2>
 <div class="card px-3 py-3 mb-3">
-    <div class="mb-3"><a href="/account/add-appliance" class="btn btn-violet">Add appliance</a></div>
+    <div class="mb-3"><a href="/account/add-category" class="btn btn-violet">Add category</a></div>
     <!-- <div class="table-responsive"> -->
     <table class="table">
         <thead class="thead-light">
@@ -125,25 +125,16 @@
                 <th scope="col">
                 Name</th>
                 <th scope="col">
-                Brand</th>
-                <th scope="col">
-                Power</th>
-                <th scope="col">
-                Category</th>
-                <th scope="col">
                 Household</th>
                 <th scope="col">
                 </th>
             </tr>
         </thead>
         <tbody>
-            {% for appliance in appliances %}
+            {% for category in categories %}
             <tr>
-                    <td>{{ appliance.name }}</td>
-                    <td>{{ appliance.brand }}</td>
-                    <td>{{ appliance.power }}</td>
-                    <td>{{ appliance.category }}</td>
-                    <td>{{ appliance.household.name }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.household.name }}</td>
                     <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
             </tr>
             {% endfor %}

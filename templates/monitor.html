@@ -1,36 +1,49 @@
 {% extends 'layout.html' %}
 {% from 'macros/forms.html' import quick_form %}
 {% block content %}
-<h1 class="mb-4 semi-bold">{{ heading }}</h1>
-<div class="card p-3 mb-3">
-    {{ chart|safe }}
-    <!-- {{ chart }} -->
-</div>
-<h2 class="mb-4 semi-bold">Report</h2>
-<div class="card p-3 mb-3">
-    <table class="table">
-        <thead class="thead-light">
-            <tr>
-                <th scope="col">
-                Date</th>
-                <th scope="col">
-                Household</th>
-                <th scope="col">
-                Sensor</th>
-                <th scope="col">
-                Event</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                {% for log in report %}
-                    <td>{{ log.id }}</td>
-                    <td>{{ log.household.name }}</td>
-                    <td>{{ log.sensor.name }}</td>
-                    <td>{{ log.event }}</td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <h1 class="mb-4 semi-bold">{{ heading }}</h1>
+{% for fold in folds %}
+    {% if fold.active %}
+        <a href="/monitor/{{ fold.household_slug }}" class="btn btn-violet active">{{ fold.household_name }}</a>
+    {% else %}
+        <a href="/monitor/{{ fold.household_slug }}" class="btn btn-violet">{{ fold.household_name }}</a>
+    {% endif %}
+{% endfor %}
+        <div class="mt-4"></div>
+
+{% for sensor_name, sensor_data in sensors.items() %}
+    {% if sensor_data.chart %}
+    <h2 class="mb-4 semi-bold">{{ sensor_name }}</h2>
+    <div class="card p-3 mb-3">
+        {{ sensor_data.chart|safe }}
+    </div>
+    {% endif %}
+{% endfor %}
+<!-- <h2 class="mb-4 semi-bold">Report</h2>
+    <div class="card p-3 mb-3">
+     <table class="table">
+     <thead class="thead-light">
+     <tr>
+     <th scope="col">
+     Date</th>
+     <th scope="col">
+     Household</th>
+     <th scope="col">
+     Sensor</th>
+     <th scope="col">
+     Event</th>
+     </tr>
+     </thead>
+     <tbody>
+     <tr>
+     {% for log in report %}
+     <td>{{ log.id }}</td>
+     <td>{{ log.household.name }}</td>
+     <td>{{ log.sensor.name }}</td>
+     <td>{{ log.event }}</td>
+     {% endfor %}
+     </tr>
+     </tbody>
+     </table>
+     </div> -->
 {% endblock %}

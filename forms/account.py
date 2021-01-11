@@ -8,6 +8,7 @@ from wtforms import (
     Form,
     StringField,
     FloatField,
+    BooleanField,
     IntegerField,
     PasswordField,
     SelectField,
@@ -60,6 +61,7 @@ class LoginForm(Form):
 class AddHouseholdForm(Form):
     name = StringField("Name", [validators.Length(min=2, max=64)])
     address = StringField("Address", [validators.Length(min=6, max=320)])
+    # favorite = BooleanField("Favorite")
     submit = SubmitField("Add household")
 
 
@@ -76,6 +78,12 @@ class AddSensorForm(Form):
     household = QuerySelectField("Household", query_factory=get_households)
     public_key = StringField("Public Key")
     submit = SubmitField("Add sensor")
+
+
+class AddCategoryForm(Form):
+    household = QuerySelectField("Household", query_factory=get_households)
+    category = SelectField("Category", choices=categories.values())
+    submit = SubmitField("Add category")
 
 
 class AddApplianceForm(Form):
