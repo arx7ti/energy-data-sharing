@@ -6,4 +6,6 @@
 /.direnv/
 **/icons/
 *.log
+*.swp
+*.swap
 **/__pycache__/
