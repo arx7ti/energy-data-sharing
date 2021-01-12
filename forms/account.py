@@ -59,7 +59,8 @@ class LoginForm(Form):
 
 
 class AddHouseholdForm(Form):
-    name = StringField("Name", [validators.Length(min=2, max=64)])
+    name = StringField("Name", [validators.Length(min=3, max=64)])
+    # name = StringField("Name", [validators.Length(min=2, max=64)])
     address = StringField("Address", [validators.Length(min=6, max=320)])
     # favorite = BooleanField("Favorite")
     submit = SubmitField("Add household")
@@ -69,14 +70,14 @@ def get_households():
     return Household.query.filter_by(account_id=current_user.id)
 
 
-def get_categories():
-    return ApplianceCategory.query.all()
+# def get_categories():
+#     return ApplianceCategory.query.all()
 
 
 class AddSensorForm(Form):
     name = StringField("Name", [validators.Length(min=2, max=64)])
     household = QuerySelectField("Household", query_factory=get_households)
-    public_key = StringField("Public Key")
+    public_key = StringField("Public Key", [validators.DataRequired()])
     submit = SubmitField("Add sensor")
 
 
@@ -86,10 +87,10 @@ class AddCategoryForm(Form):
     submit = SubmitField("Add category")
 
 
-class AddApplianceForm(Form):
-    household = QuerySelectField("Household", query_factory=get_households)
-    category = SelectField("Category", choices=categories.values())
-    name = StringField("Name", [validators.Length(min=2, max=64)])
-    brand = StringField("Brand", [validators.Length(min=2, max=64)])
-    power = FloatField("Power", [validators.DataRequired()])
-    submit = SubmitField("Add appliance")
+# class AddApplianceForm(Form):
+#     household = QuerySelectField("Household", query_factory=get_households)
+#     category = SelectField("Category", choices=categories.values())
+#     name = StringField("Name", [validators.Length(min=2, max=64)])
+#     brand = StringField("Brand", [validators.Length(min=2, max=64)])
+#     power = FloatField("Power", [validators.DataRequired()])
+#     submit = SubmitField("Add appliance")

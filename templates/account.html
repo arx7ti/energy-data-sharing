@@ -78,7 +78,7 @@
             <tr>
                     <td>{{ household.name }}</td>
                     <td>{{ household.address }}</td>
-                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td class="text-right"><a href="/account/delete-household?hid={{household.id}}" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -108,7 +108,7 @@
                     <td>{{ sensor.name }}<span class="ml-1 badge widget-aqua">Online</span></td>
                     <td>{{ sensor.household.name }} {{ sensor.public_key }}</td>
                     <td><span class="badge widget-orange">Verified</span></td>
-                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td class="text-right"><a href="/account/delete-sensor?sid={{sensor.id}}&hid={{sensor.household.id}}" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -135,7 +135,7 @@
             <tr>
                     <td>{{ category.name }}</td>
                     <td>{{ category.household.name }}</td>
-                    <td class="text-right"><a href="#" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
+                    <td class="text-right"><a href="/account/delete-category?cid={{ category.id }}&hid={{ category.household_id  }}" class="btn just-table-icon btn-red"><i class="far fa-trash-alt"></i></a></td>
             </tr>
             {% endfor %}
         </tbody>

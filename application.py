@@ -2,6 +2,7 @@
 
 import io
 from kernel.store import categories
+from werkzeug.exceptions import BadRequest
 from itertools import chain
 import torch
 import pandas as pd
@@ -21,7 +22,7 @@ from flask import (
     abort,
 )
 from models.shared import db
-from models.account import Account, Household, Sensor, Appliance, Category
+from models.account import Account, Household, Sensor, Category
 from models.core import Page, Widget
 from models.monitor import Classifier
 from forms.core import AddPageForm, AddWidgetForm
@@ -31,7 +32,7 @@ from forms.account import (
     AddCategoryForm,
     AddHouseholdForm,
     AddSensorForm,
-    AddApplianceForm,
+    # AddApplianceForm,
 )
 from flask_migrate import Migrate
 from flask_login import (
@@ -52,7 +53,8 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://admin:admin@localhost/deep
 login_manager = LoginManager()
 db.init_app(app)
 login_manager.init_app(app)
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
+# migrate.init_app(app)
 Bootstrap(app)
 
 # with app.app_context():
@@ -122,6 +124,22 @@ def signup():
     return render_template("form.html", heading="Sing Up", form=form)
 
 
+@app.route("/account/delete-household", methods=["GET"])
+@login_required
+def delete_household():
+    household_id = request.args.get("hid")
+    try:
+        household = Household.query.filter_by(
+            id=household_id, account_id=current_user.id
+        ).first()
+        db.session.delete(household)
+        db.session.commit()
+    except Exception:
+        raise BadRequest("Error during deletion.")
+    else:
+        return redirect(url_for("account"))
+
+
 @app.route("/account/add-household", methods=["GET", "POST"])
 @login_required
 def add_household():
@@ -132,12 +150,29 @@ def add_household():
             slug=slugify(form.name.data),
             name=form.name.data,
             address=form.address.data,
-            favorite=form.favorite.data,
+            # favorite=form.favorite.data,
         )
+        print("suka ebanaya")
+        print(household.name)
         db.session.add(household)
         db.session.commit()
         return redirect(url_for("account"))
     return render_template("form.html", heading="Add Household", form=form)
+
+
+@app.route("/account/delete-sensor", methods=["GET"])
+@login_required
+def delete_sensor():
+    sensor_id = request.args.get("sid")
+    household_id = request.args.get("hid")
+    try:
+        sensor = Sensor.query.filter_by(id=sensor_id, household_id=household_id).first()
+        db.session.delete(sensor)
+        db.session.commit()
+    except Exception:
+        raise BadRequest("Error during deletion.")
+    else:
+        return redirect(url_for("account"))
 
 
 @app.route("/account/add-sensor", methods=["GET", "POST"])
@@ -156,6 +191,23 @@ def add_sensor():
     return render_template("form.html", heading="Add Sensor", form=form)
 
 
+@app.route("/account/delete-category", methods=["GET"])
+@login_required
+def delete_category():
+    category_id = request.args.get("cid")
+    household_id = request.args.get("hid")
+    try:
+        category = Category.query.filter_by(
+            id=category_id, household_id=household_id
+        ).first()
+        db.session.delete(category)
+        db.session.commit()
+    except Exception:
+        raise BadRequest("Error during deletion.")
+    else:
+        return redirect(url_for("account"))
+
+
 @app.route("/account/add-category", methods=["GET", "POST"])
 @login_required
 def add_category():
@@ -172,22 +224,22 @@ def add_category():
     return render_template("form.html", heading="Add Category", form=form)
 
 
-@app.route("/account/add-appliance", methods=["GET", "POST"])
-@login_required
-def add_appliance():
-    form = AddApplianceForm(request.form)
-    if request.method == "POST" and form.validate():
-        appliance = Appliance(
-            household_id=form.household.data.id,
-            category=form.category.data,
-            name=form.name.data,
-            brand=form.brand.data,
-            power=form.power.data,
-        )
-        db.session.add(appliance)
-        db.session.commit()
-        return redirect(url_for("account"))
-    return render_template("form.html", heading="Add Appliance", form=form)
+# @app.route("/account/add-appliance", methods=["GET", "POST"])
+# @login_required
+# def add_appliance():
+#     form = AddApplianceForm(request.form)
+#     if request.method == "POST" and form.validate():
+#         appliance = Appliance(
+#             household_id=form.household.data.id,
+#             category=form.category.data,
+#             name=form.name.data,
+#             brand=form.brand.data,
+#             power=form.power.data,
+#         )
+#         db.session.add(appliance)
+#         db.session.commit()
+#         return redirect(url_for("account"))
+#     return render_template("form.html", heading="Add Appliance", form=form)
 
 
 @app.route("/page/<string:slug>")
@@ -328,37 +380,67 @@ def render_chart(sensor_id, related_categories_query):
 
     base_chart = (
         alt.Chart(source.reset_index())
-        .mark_circle(size=32)
-        .transform_fold(fold=related_categories, as_=["categories", "value"])
+        .mark_tick(size=40)
+        .transform_fold(fold=related_categories, as_=["category", "probability"])
         .encode(
-            x="index:Q",
-            y=alt.Y("categories:N", axis=alt.Axis(title=None)),
+            x=alt.X(
+                "index:Q",
+                axis=alt.Axis(grid=True, tickWidth=0, offset=5, gridColor="#b5b5c3"),
+            ),
+            y=alt.Y(
+                "category:N",
+                axis=alt.Axis(
+                    title=None,
+                    # grid=True,
+                    tickWidth=0,
+                    offset=5,
+                    # tickOffset=20,
+                ),
+            ),
             # color="value:Q",
             tooltip=[
-                alt.Tooltip("value:Q", format=".2f"),
+                alt.Tooltip("category:N"),
+                alt.Tooltip("probability:Q", format=".2f"),
                 alt.Tooltip("index:Q", format="d"),
             ],
             color=alt.Color(
-                "value:Q",
+                "probability:Q",
                 scale=alt.Scale(
-                    domain=[0, 0.5, 1],
+                    domain=[0, 0.29],
                     # range=["#ffffff", "#e7dcfe", "#cfb9fd", "#ac84fc", "#8950fc"],
-                    range=["#ffffff", "#000000"],
+                    # range=["transparent", "transparent", "#8950fc", "#f64e60"],
+                    range=["transparent", "transparent", "#f64e60"],
                     type="linear",
                 ),
                 legend=None,
             ),
         )
+    )
+    horizontal_lines = (
+        alt.Chart(
+            pd.DataFrame({"bound": np.arange(0, 20 * len(related_categories), 20)})
+        )
+        .mark_rule(color="#b5b5c3", yOffset=20)
+        .encode(
+            y=alt.Y(
+                "bound:O",
+                axis=alt.Axis(title=None, offset=10, labels=False, tickWidth=0),
+            )
+        )
+    )
+
+    return (
+        alt.layer(base_chart, horizontal_lines)
+        .resolve_scale(y="independent")
         .properties(width=625, height=40 * len(related_categories))
-        .configure_axis(titleFontSize=14, labelFontSize=14)
-        # .configure_view(strokeOpacity=0)
-        # .interactive()
-        # .configure_legend(orient="bottom", labelFontSize=18, titleFontSize=18)
+        .configure_axis(
+            titleFontSize=14, labelFontSize=14, domain=False, labelFontWeight=800
+        )
+        .configure_view(stroke=None)
+        .to_html()
+        if len(predictions) > 0
+        else None
     )
-    selection = alt.selection_single(
-        fields=["index"], nearest=True, on="mouseover", empty="none", clear="mouseout"
-    )
-    return base_chart.to_html() if len(predictions) > 0 else None
 
 
 @app.route("/monitor", defaults={"household_slug": None})
@@ -373,6 +455,12 @@ def monitor(household_slug):
         # Raise 404 error if does not exist
         if not household_by_query:
             abort(404)
+    else:
+        household_by_query = (
+            Household.query.filter_by(account_id=current_user.id)
+            .order_by(Household.name.asc())
+            .first()
+        )
 
     folds = []
     for household in list(
