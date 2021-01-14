@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 
+# from matplotlib import pyplot
 from scipy.signal import resample, resample_poly
 from torch.nn.functional import relu
 from numpy import concatenate, greater, diff, where
@@ -55,20 +56,21 @@ from torch import (
     log,
     flip,
     sin,
-    stft,
     sqrt,
     atan2,
     log10,
     linspace,
-    hann_window,
     sigmoid,
     cdist,
     full,
     int64,
     clamp,
+    stft,
+    hann_window,
+    log,
+    abs as tensor_abs,
     max as tensor_max,
     min as tensor_min,
-    abs as tensor_abs,
 )
 
 
@@ -80,6 +82,7 @@ x3 = 50 * (
     + sin(2 * 3.14 * 50 * t1.to(dtype=float32))
     + sin(2 * 3.14 * 250 * t1.to(dtype=float32))
     + sin(2 * 3.14 * 350 * t1.to(dtype=float32))
+    + sin(2 * 3.14 * 850 * t1.to(dtype=float32))
 )
 x4 = zeros(1000)
 x5 = 100 * sin(2 * 3.14 * 500 * t1.to(dtype=float32))
@@ -106,24 +109,26 @@ class ResidualBlock(Module):
                 padding=padding,
                 stride=stride,
             ),
-            # BatchNorm2d(output_channels, track_running_stats=False),
+            Dropout(0.1),
+            # BatchNorm2d(output_channels),
             ReLU(True),
         )
         self.conv_2 = Sequential(
             Conv2d(output_channels, output_channels, receptive_field, padding=padding),
-            # BatchNorm2d(output_channels, track_running_stats=False),
+            Dropout(0.1),
+            # BatchNorm2d(output_channels),
         )
         self.conv_3 = Sequential(
             Conv2d(input_channels, output_channels, kernel_size=1, stride=stride),
-            # Dropout(0.1),
+            Dropout(0.1),
         )
-        self.dropout = Dropout(0.1)
+        # self.dropout = Dropout(0.1)
 
     def forward(self, x):
         y = self.conv_2(self.conv_1(x))
         if x.size() != y.size():
             x = self.conv_3(x)
-        y = self.dropout(y)
+        # y = self.dropout(y)
         y = y + x
         return relu(y)
 
@@ -218,53 +223,63 @@ class Model(Module):
     def __init__(self, nloads):
         super(Model, self).__init__()
         self.norm0 = BatchNorm2d(1)
-        self.norm0.bias.data.fill_(0.0)
-        self.norm0.weight.data.fill_(1.0)
+        # self.norm0.bias.data.fill_(0.0)
+        # self.norm0.weight.data.fill_(1.0)
         self.encoder = Sequential(
             ResidualBlock(1, 32, 3),
-            ResidualBlock(32, 32, 3),
+            # ResidualBlock(32, 32, 3),
             AvgPool2d((4, 2)),
             ResidualBlock(32, 64, 3),
-            ResidualBlock(64, 64, 3),
             # ResidualBlock(64, 64, 3),
-            AvgPool2d((4, 2)),
+            # ResidualBlock(64, 64, 3),
+            AvgPool2d((2, 2)),
             ResidualBlock(64, 128, 3),
-            ResidualBlock(128, 128, 3),
+            # ResidualBlock(128, 128, 3),
+            # ResidualBlock(128, 128, 3),
+            AvgPool2d((2, 2)),
+            ResidualBlock(128, 256, 3),
+            # ResidualBlock(256, 256, 3),
+            # ResidualBlock(256, 256, 3),
+            # ResidualBlock(256, 256, 3),
+            # ResidualBlock(128, 128, 3),
             # ResidualBlock(128, 128, 3),
         )
-        self.avg_pool = AvgPool2d((4, 50))
-        self.max_pool = MaxPool2d((4, 50))
-        self.embedding = ConvTranspose2d(128, 128, (1, 50), stride=(1, 2))
-        self.attention1 = MultiHeadAttention(128, 2, 64, 64)
-        self.ffn1 = Sequential(Linear(128, 64), ReLU(True), Linear(64, 128))
+        self.avg_pool = AvgPool2d((2, 2))
+        self.max_pool = MaxPool2d((2, 2))
+        # self.embedding = ConvTranspose2d(128, 128, (1, 50), stride=(1, 2))
+        self.attention1 = MultiHeadAttention(256, 8, 32, 32)
+        self.ffn1 = Sequential(Linear(256, 32), ReLU(True), Linear(32, 256))
         self.labels = Sequential(
-            Linear(128, 128), ReLU(True), Linear(128, nloads), Sigmoid(),
+            Linear(256, 128), Dropout(0.1), ReLU(True), Linear(128, nloads), Sigmoid(),
         )
-        self.norm1 = LayerNorm(128, eps=1e-6)
+        self.norm1 = LayerNorm(256, eps=1e-6)
         self.dropout1 = Dropout(0.1)
 
     def forward(self, x):
-        # win_len = 63
-        win_len = 127
-        hop_size = 25
-        # hop_size = 50
+        # x = self.spectrogram(x)
+        window_length = 63
+        # hop_size = 25
+        hop_size = window_length
         x = stft(
             x,
-            n_fft=win_len,
+            n_fft=window_length,
             hop_length=hop_size,
-            window=hann_window(win_len).to(device=x.device),
+            window=hann_window(window_length).to(device=x.device),
             return_complex=True,
-            normalized=True,
+            # normalized=True,
         )
-        # print("stft:", x.shape)
         x = tensor_abs(x)
+        x = 2 * log(x + 1e-9)
+        # print("stft:", x.shape)
         x = unsqueeze(x, 1)
         x = self.norm0(x)
         y = self.encoder(x)
         # print("backbone:", y.shape)
         y_m = self.max_pool(y)
         y_a = self.avg_pool(y)
-        y = self.embedding(y_m + y_a)
+        # y = self.embedding(y_m + y_a)
+        y = y_m + y_a
+        # y = y_m
         # print("backbone:", y.shape)
         bs, chls, freqs, frames = y.size()
         s = y.permute(0, 3, 1, 2)
@@ -277,10 +292,13 @@ class Model(Module):
         # print(a.shape)
         l = self.labels(a)
         return l
+        # return x
 
 
 # print(x.shape)
 # m = Model(3)
-# m(x)
-# pyplot.plot(resample(y[0], 1, 6))
+# x = m(x)
+# pyplot.plot(where(resample(y[0], 6) > 0.6, 1, 0))
+# print(y[0][::1000])
+# pyplot.imshow(x[0])
 # pyplot.show()

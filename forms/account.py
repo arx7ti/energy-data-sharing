@@ -60,7 +60,6 @@ class LoginForm(Form):
 
 class AddHouseholdForm(Form):
     name = StringField("Name", [validators.Length(min=3, max=64)])
-    # name = StringField("Name", [validators.Length(min=2, max=64)])
     address = StringField("Address", [validators.Length(min=6, max=320)])
     # favorite = BooleanField("Favorite")
     submit = SubmitField("Add household")

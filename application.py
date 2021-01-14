@@ -317,7 +317,7 @@ def add_widget():
 model = Model(55)
 model.load_state_dict(
     torch.load(
-        "../deep-nilm/store/model-attentions-0b48121a1172d2dc1340002503aafcdc.pth"
+        "/home/arx7ti/gits/deep-nilm/store/model-attentions-86c27b609f045c1c82164db31ba74696.pth"
     )["weights"]
 )
 model.eval()
@@ -366,14 +366,14 @@ def render_chart(sensor_id, related_categories_query):
         .limit(12)
     )[::-1]
     predictions = [
-        # np.where(
-        fromstring(x.predictions, dtype="float32", count=50 * len(categories)).reshape(
-            50, len(categories)
-        )[:, pointer]
-        #     > 0.19,
-        #     1,
-        #     0,
-        # )
+        np.where(
+            fromstring(x.predictions, dtype="float32", count=5 * 55).reshape(5, 55)[
+                :, pointer
+            ]
+            > 0.42,
+            1,
+            0,
+        )
         for x in predictions
     ]
     source = pd.DataFrame(chain(*predictions), columns=related_categories)
@@ -386,6 +386,7 @@ def render_chart(sensor_id, related_categories_query):
             x=alt.X(
                 "index:Q",
                 axis=alt.Axis(grid=True, tickWidth=0, offset=5, gridColor="#b5b5c3"),
+                scale=alt.Scale(nice=False),
             ),
             y=alt.Y(
                 "category:N",
@@ -406,11 +407,11 @@ def render_chart(sensor_id, related_categories_query):
             color=alt.Color(
                 "probability:Q",
                 scale=alt.Scale(
-                    domain=[0, 0.29],
+                    # domain=[0, 1],
                     # range=["#ffffff", "#e7dcfe", "#cfb9fd", "#ac84fc", "#8950fc"],
-                    # range=["transparent", "transparent", "#8950fc", "#f64e60"],
-                    range=["transparent", "transparent", "#f64e60"],
-                    type="linear",
+                    # range=["transparent", "transparent", "#f64e60"],
+                    range=["transparent", "#f64e60"],
+                    # type="linear",
                 ),
                 legend=None,
             ),
