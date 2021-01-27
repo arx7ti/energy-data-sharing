@@ -227,51 +227,48 @@ class Model(Module):
         # self.norm0.weight.data.fill_(1.0)
         self.encoder = Sequential(
             ResidualBlock(1, 32, 3),
-            # ResidualBlock(32, 32, 3),
-            AvgPool2d((4, 2)),
+            AvgPool2d((16, 1)),
             ResidualBlock(32, 64, 3),
-            # ResidualBlock(64, 64, 3),
-            # ResidualBlock(64, 64, 3),
-            AvgPool2d((2, 2)),
+            AvgPool2d((4, 1)),
             ResidualBlock(64, 128, 3),
-            # ResidualBlock(128, 128, 3),
-            # ResidualBlock(128, 128, 3),
-            AvgPool2d((2, 2)),
+            MaxPool2d((4, 1)),
             ResidualBlock(128, 256, 3),
             # ResidualBlock(256, 256, 3),
-            # ResidualBlock(256, 256, 3),
-            # ResidualBlock(256, 256, 3),
-            # ResidualBlock(128, 128, 3),
-            # ResidualBlock(128, 128, 3),
+            MaxPool2d((4, 1)),
+            ResidualBlock(256, 512, 3),
+            # ResidualBlock(512, 512, 3),
+            # ResidualBlock(512, 512, 3),
         )
-        self.avg_pool = AvgPool2d((2, 2))
-        self.max_pool = MaxPool2d((2, 2))
+        self.avg_pool = AvgPool2d((2, 1))
+        self.max_pool = MaxPool2d((2, 1))
         # self.embedding = ConvTranspose2d(128, 128, (1, 50), stride=(1, 2))
-        self.attention1 = MultiHeadAttention(256, 8, 32, 32)
-        self.ffn1 = Sequential(Linear(256, 32), ReLU(True), Linear(32, 256))
+        self.attention1 = MultiHeadAttention(512, 8, 64, 64)
+        self.ffn1 = Sequential(Linear(512, 64), ReLU(True), Linear(64, 512))
         self.labels = Sequential(
-            Linear(256, 128), Dropout(0.1), ReLU(True), Linear(128, nloads), Sigmoid(),
+            Linear(512, 256), Dropout(0.1), ReLU(True), Linear(256, nloads), Sigmoid(),
         )
-        self.norm1 = LayerNorm(256, eps=1e-6)
+        self.norm1 = LayerNorm(512, eps=1e-6)
         self.dropout1 = Dropout(0.1)
 
     def forward(self, x):
         # x = self.spectrogram(x)
-        window_length = 63
-        # hop_size = 25
+        window_length = 1024
+        # hop_size = window_length // 2
         hop_size = window_length
-        x = stft(
-            x,
-            n_fft=window_length,
-            hop_length=hop_size,
-            window=hann_window(window_length).to(device=x.device),
-            return_complex=True,
-            # normalized=True,
-        )
+        x = rfft(x, dim=-1, norm="forward")
+        # x = stft(
+        #     x,
+        #     n_fft=window_length,
+        #     hop_length=hop_size,
+        #     window=hann_window(window_length).to(device=x.device),
+        #     return_complex=True,
+        #     normalized=True,
+        # )
+        # print("stft:", x.shape)
         x = tensor_abs(x)
         x = 2 * log(x + 1e-9)
-        # print("stft:", x.shape)
         x = unsqueeze(x, 1)
+        x = unsqueeze(x, -1)
         x = self.norm0(x)
         y = self.encoder(x)
         # print("backbone:", y.shape)

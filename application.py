@@ -314,12 +314,8 @@ def add_widget():
     return render_template("form.html", heading="Add Widget", form=form)
 
 
-model = Model(55)
-model.load_state_dict(
-    torch.load(
-        "/home/arx7ti/gits/deep-nilm/store/model-attentions-86c27b609f045c1c82164db31ba74696.pth"
-    )["weights"]
-)
+model = Model(51)
+model.load_state_dict(torch.load("/home/arx7ti/gits/deep-nilm/prototype111.pth"))
 model.eval()
 
 
@@ -352,9 +348,7 @@ def push_signal():
 
 
 def render_chart(sensor_id, related_categories_query):
-    related_categories = sorted(
-        list(map(lambda query: query.name, related_categories_query))
-    )
+    related_categories = list(map(lambda query: query.name, related_categories_query))
     pointer = [
         index
         for index, category in enumerate(categories.values())
@@ -363,20 +357,19 @@ def render_chart(sensor_id, related_categories_query):
     predictions = list(
         Classifier.query.filter_by(sensor_id=sensor_id)
         .order_by(Classifier.date.desc())
-        .limit(12)
+        .limit(180)
     )[::-1]
     predictions = [
         np.where(
-            fromstring(x.predictions, dtype="float32", count=5 * 55).reshape(5, 55)[
-                :, pointer
-            ]
-            > 0.42,
-            1,
-            0,
+            fromstring(x.predictions, dtype="float32", count=51)[pointer] > 0.42, 1, 0,
         )
         for x in predictions
     ]
-    source = pd.DataFrame(chain(*predictions), columns=related_categories)
+    source = pd.DataFrame(
+        chain(predictions),
+        columns=[categories[list(categories.keys())[i]] for i in pointer],
+    )
+    source = source.rename_axis("time")
 
     base_chart = (
         alt.Chart(source.reset_index())
@@ -384,7 +377,7 @@ def render_chart(sensor_id, related_categories_query):
         .transform_fold(fold=related_categories, as_=["category", "probability"])
         .encode(
             x=alt.X(
-                "index:Q",
+                "time:Q",
                 axis=alt.Axis(grid=True, tickWidth=0, offset=5, gridColor="#b5b5c3"),
                 scale=alt.Scale(nice=False),
             ),
@@ -402,7 +395,7 @@ def render_chart(sensor_id, related_categories_query):
             tooltip=[
                 alt.Tooltip("category:N"),
                 alt.Tooltip("probability:Q", format=".2f"),
-                alt.Tooltip("index:Q", format="d"),
+                alt.Tooltip("time:O", format="d"),
             ],
             color=alt.Color(
                 "probability:Q",
